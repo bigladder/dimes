@@ -17,6 +17,9 @@ class TimeSeriesPlot:
         self.title = ""
         self.time_values = time_values
         # self.subplots = []#: list(TimeSeriesData) = []
+    def add_time_series(self, time_series: TimeSeriesData, subplot_number: int = 0):
+        self.series.append(time_series)
+    
     def finalize_plot(self):
         if not self.is_finalized:
             if not self.series:
