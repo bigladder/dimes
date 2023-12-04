@@ -1,4 +1,5 @@
 from plotly.graph_objects import Figure, Scatter
+from plotly.subplots import make_subplots
 from pathlib import Path
 
 class TimeSeriesData:
@@ -16,17 +17,7 @@ class TimeSeriesPlot:
         self.figure = Figure()
         self.title = ""
         self.time_values = time_values
-        self.subplots = []#: list(TimeSeriesData) = []
-
-    def add_time_series(self, time_series: TimeSeriesData):
-        self.figure.add_trace(
-            Scatter(
-                x=self.time_values,
-                y=time_series.data_values,
-                name=time_series.name,
-                mode="lines",
-                visible='legendonly' if not time_series.default_visibility else True
-            ))
+        # self.subplots = []#: list(TimeSeriesData) = []
 
     def write_html_plot(self, path: Path):
         self.figure.write_html(path)
