@@ -1,6 +1,7 @@
 from plotly.graph_objects import Figure, Scatter
 from plotly.subplots import make_subplots
 from pathlib import Path
+from typing import List
 
 class TimeSeriesData:
     def __init__(self, data_values):
