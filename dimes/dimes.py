@@ -12,11 +12,14 @@ class TimeSeriesData:
 
 class TimeSeriesPlot:
 
-    def __init__(self, time_values):
-        self.figure = Figure()
-        self.title = ""
+    def __init__(self, time_values: list):
+        self.fig = Figure()
+        # self.fig = make_subplots(rows=2,shared_xaxes=True)
         self.time_values = time_values
         # self.subplots = []#: list(TimeSeriesData) = []
+        self.series: List[TimeSeriesData] = []
+        self.is_finalized = False
+
     def add_time_series(self, time_series: TimeSeriesData, subplot_number: int = 0):
         self.series.append(time_series)
     
