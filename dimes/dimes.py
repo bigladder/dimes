@@ -4,13 +4,11 @@ from pathlib import Path
 from typing import List
 
 class TimeSeriesData:
-    def __init__(self, data_values):
-        self.default_visibility = True
-        self.dimension = ""
-        self.name = ""
+    def __init__(self, data_values: list, name: str = "", color: str | None = None, is_visible: bool = True):
+        self.is_visible = is_visible
+        self.name = name
         self.data_values = data_values
-        self.subplot_index = 0
-        self.color = 0
+        self.color = color
 
 class TimeSeriesPlot:
 
