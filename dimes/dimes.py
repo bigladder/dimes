@@ -42,3 +42,4 @@ class TimeSeriesPlot:
 
     def write_html_plot(self, path: Path):
         self.finalize_plot()
+        self.fig.write_html(path)
