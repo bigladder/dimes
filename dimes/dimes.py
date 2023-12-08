@@ -5,9 +5,6 @@ from plotly.graph_objects import Figure, Scatter  # type: ignore
 from plotly.subplots import make_subplots  # type: ignore
 
 
-# from plotly.subplots import make_subplots
-
-
 class TimeSeriesData:
     """Time series data."""
 
