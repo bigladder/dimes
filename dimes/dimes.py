@@ -2,6 +2,8 @@
 from pathlib import Path
 from typing import List
 from plotly.graph_objects import Figure, Scatter  # type: ignore
+from plotly.subplots import make_subplots  # type: ignore
+
 
 # from plotly.subplots import make_subplots
 
@@ -21,36 +23,56 @@ class TimeSeriesData:
 class TimeSeriesPlot:
     """Time series plot."""
 
+    class TimeSeriesSubplotPair:
+        """Basic class to couple time series and subplot number"""
+
+        def __init__(self, time_series: TimeSeriesData, subplot_number: int):
+            self.time_series = time_series
+            self.subplot_number = subplot_number
+
     def __init__(self, time_values: list):
         self.fig = Figure()
         # self.fig = make_subplots(rows=2,shared_xaxes=True)
         self.time_values = time_values
-        # self.subplots = []#: list(TimeSeriesData) = []
-        self.series: List[TimeSeriesData] = []
+        self.number_of_subplots = 1
+        self.time_series_subplot_pairs: List[TimeSeriesPlot.TimeSeriesSubplotPair] = []
         self.is_finalized = False
 
-    def add_time_series(self, time_series: TimeSeriesData, subplot_number: int = 0):
+    def add_time_series(self, time_series: TimeSeriesData, subplot_number: int | None = None):
         """Add a TimeSeriesData object to the plot."""
-        self.series.append(time_series)
+        if subplot_number is None:
+            subplot_number = self.number_of_subplots
+        else:
+            self.number_of_subplots = max(subplot_number, self.number_of_subplots)
+        self.time_series_subplot_pairs.append(
+            TimeSeriesPlot.TimeSeriesSubplotPair(time_series, subplot_number)
+        )
 
     def finalize_plot(self):
         """Once all TimeSeriesData objects have been added, generate plot and subplots."""
         if not self.is_finalized:
-            if not self.series:
+            if not self.time_series_subplot_pairs:
                 raise Exception("No time series data provided.")
-            for time_series in self.series:
+            if self.number_of_subplots > 1:
+                self.fig = make_subplots(
+                    rows=self.number_of_subplots, shared_xaxes=True, vertical_spacing=0.05
+                )
+            for time_series_subplot_pair in self.time_series_subplot_pairs:
                 self.fig.add_trace(
                     Scatter(
                         x=self.time_values,
-                        y=time_series.data_values,
-                        name=time_series.name,
+                        y=time_series_subplot_pair.time_series.data_values,
+                        name=time_series_subplot_pair.time_series.name,
                         mode="lines",
-                        visible="legendonly" if not time_series.is_visible else True,
-                        line=dict(color=time_series.color),
+                        visible="legendonly"
+                        if not time_series_subplot_pair.time_series.is_visible
+                        else True,
+                        line=dict(color=time_series_subplot_pair.time_series.color),
                     ),
-                    row=time_series.subplot_index,
-                    # row=1,
-                    col=1,
+                    row=None
+                    if self.number_of_subplots == 1
+                    else time_series_subplot_pair.subplot_number,
+                    col=None if self.number_of_subplots == 1 else 1,
                 )
 
             self.is_finalized = True
