@@ -7,6 +7,7 @@ from dimes import TimeSeriesPlot, TimeSeriesData
 TESTING_DIRECTORY = Path("test_outputs")
 TESTING_DIRECTORY.mkdir(exist_ok=True)
 
+
 def test_basic_plot():
     """Test basic plot"""
     plot = TimeSeriesPlot([1, 2, 3, 4, 5])
@@ -20,7 +21,7 @@ def test_basic_subplot():
     """Test basic subplot"""
     plot = TimeSeriesPlot([1, 2, 3, 4, 5])
     plot.add_time_series(TimeSeriesData([x**2 for x in plot.time_values]))
-    plot.add_time_series(TimeSeriesData([x**3 for x in plot.time_values]), subplot_number = 2)
+    plot.add_time_series(TimeSeriesData([x**3 for x in plot.time_values]), subplot_number=2)
 
     plot.write_html_plot(Path(TESTING_DIRECTORY, "basic_subplot.html"))
 

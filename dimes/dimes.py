@@ -1,6 +1,9 @@
 """Module for plotting time series data."""
 from pathlib import Path
 from typing import List
+import warnings
+from dataclasses import dataclass
+
 from plotly.graph_objects import Figure, Scatter  # type: ignore
 from plotly.subplots import make_subplots  # type: ignore
 
@@ -20,12 +23,12 @@ class TimeSeriesData:
 class TimeSeriesPlot:
     """Time series plot."""
 
+    @dataclass
     class TimeSeriesSubplotPair:
         """Basic class to couple time series and subplot number"""
 
-        def __init__(self, time_series: TimeSeriesData, subplot_number: int):
-            self.time_series = time_series
-            self.subplot_number = subplot_number
+        time_series: TimeSeriesData
+        subplot_number: int
 
     def __init__(self, time_values: list):
         self.fig = Figure()
@@ -54,6 +57,7 @@ class TimeSeriesPlot:
                 self.fig = make_subplots(
                     rows=self.number_of_subplots, shared_xaxes=True, vertical_spacing=0.05
                 )
+            subplots_used = [False] * self.number_of_subplots
             for time_series_subplot_pair in self.time_series_subplot_pairs:
                 self.fig.add_trace(
                     Scatter(
@@ -71,6 +75,11 @@ class TimeSeriesPlot:
                     else time_series_subplot_pair.subplot_number,
                     col=None if self.number_of_subplots == 1 else 1,
                 )
+                subplots_used[time_series_subplot_pair.subplot_number - 1] = True
+
+            for i, subplot_used in enumerate(subplots_used):
+                if not subplot_used:
+                    warnings.warn(f"Subplot {i + 1} is unused.")
 
             self.is_finalized = True
 
