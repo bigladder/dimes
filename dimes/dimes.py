@@ -6,18 +6,39 @@ from dataclasses import dataclass
 
 from plotly.graph_objects import Figure, Scatter  # type: ignore
 from plotly.subplots import make_subplots  # type: ignore
+import koozie
 
 
 class TimeSeriesData:
     """Time series data."""
 
     def __init__(
-        self, data_values: list, name: str = "", color: str | None = None, is_visible: bool = True
+        self,
+        data_values: list,
+        name: str | None = None,
+        native_units: str = "",
+        display_units: str | None = None,
+        color: str | None = None,
+        is_visible: bool = True,
     ):
-        self.is_visible = is_visible
-        self.name = name
         self.data_values = data_values
+        self.native_units = native_units
+        self.dimensionality = koozie.get_dimensionality(self.native_units)
+        if name is None:
+            self.name = str(self.dimensionality)
+        else:
+            self.name = name
+        if display_units is None:
+            self.display_units = self.native_units
+        else:
+            self.display_units = display_units
+            display_units_dimensionality = koozie.get_dimensionality(self.display_units)
+            if self.dimensionality != display_units_dimensionality:
+                raise Exception(
+                    f"display_units, {self.display_units}, dimensionality ({display_units_dimensionality}) does not match native_units, {self.native_units}, dimensionality ({self.dimensionality})"
+                )
         self.color = color
+        self.is_visible = is_visible
 
 
 class TimeSeriesPlot:

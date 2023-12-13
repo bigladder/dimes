@@ -42,3 +42,19 @@ def test_plot_twice():
 
     plot.write_html_plot(Path(TESTING_DIRECTORY, "plot_twice_1.html"))
     plot.write_html_plot(Path(TESTING_DIRECTORY, "plot_twice_2.html"))
+
+
+def test_bad_units():
+    """Expect an exception if no TimeSeriesData added to a plot."""
+    plot = TimeSeriesPlot([1, 2, 3, 4, 5])
+    with pytest.raises(Exception) as exception:
+        plot.add_time_series(
+            TimeSeriesData(
+                [x**2 for x in plot.time_values],
+                "Temperature",
+                native_units="degF",
+                display_units="C",
+            )
+        )
+
+    assert "[current] * [time]" in str(exception)
