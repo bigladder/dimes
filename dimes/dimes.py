@@ -12,12 +12,18 @@ class TimeSeriesData:
     """Time series data."""
 
     def __init__(
-        self, data_values: list, name: str = "", color: str | None = None, is_visible: bool = True
+        self,
+        data_values: list,
+        name: str = "",
+        color: str | None = None,
+        is_visible: bool = True,
+        line_type: str | None = None,
     ):
         self.is_visible = is_visible
         self.name = name
         self.data_values = data_values
         self.color = color
+        self.line_type = line_type
 
 
 class TimeSeriesPlot:
@@ -68,7 +74,10 @@ class TimeSeriesPlot:
                         visible="legendonly"
                         if not time_series_subplot_pair.time_series.is_visible
                         else True,
-                        line=dict(color=time_series_subplot_pair.time_series.color),
+                        line=dict(
+                            color=time_series_subplot_pair.time_series.color,
+                            dash=time_series_subplot_pair.time_series.line_type,
+                        ),
                     ),
                     row=None
                     if self.number_of_subplots == 1
