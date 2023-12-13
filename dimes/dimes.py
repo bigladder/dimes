@@ -1,6 +1,6 @@
 """Module for plotting time series data."""
 from pathlib import Path
-from typing import List
+from typing import List, Union
 import warnings
 from dataclasses import dataclass
 
@@ -15,9 +15,9 @@ class TimeSeriesData:
         self,
         data_values: list,
         name: str = "",
-        color: str | None = None,
+        color: Union[str, None] = None,
         is_visible: bool = True,
-        line_type: str | None = None,
+        line_type: Union[str, None] = None,
     ):
         self.is_visible = is_visible
         self.name = name
@@ -45,7 +45,7 @@ class TimeSeriesPlot:
         self.is_finalized = False
 
     def add_time_series(
-        self, time_series: TimeSeriesData, subplot_number: int | None = None
+        self, time_series: TimeSeriesData, subplot_number: Union[int, None] = None
     ) -> None:
         """Add a TimeSeriesData object to the plot."""
         if subplot_number is None:
