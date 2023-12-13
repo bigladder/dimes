@@ -19,6 +19,7 @@ class TimeSeriesData:
         native_units: str = "",
         display_units: str | None = None,
         color: str | None = None,
+        line_type: str | None = None,
         is_visible: bool = True,
     ):
         self.data_values = data_values
@@ -38,6 +39,7 @@ class TimeSeriesData:
                     f"display_units, {self.display_units}, dimensionality ({display_units_dimensionality}) does not match native_units, {self.native_units}, dimensionality ({self.dimensionality})"
                 )
         self.color = color
+        self.line_type = line_type
         self.is_visible = is_visible
 
 
@@ -89,7 +91,10 @@ class TimeSeriesPlot:
                         visible="legendonly"
                         if not time_series_subplot_pair.time_series.is_visible
                         else True,
-                        line=dict(color=time_series_subplot_pair.time_series.color),
+                        line=dict(
+                            color=time_series_subplot_pair.time_series.color,
+                            dash=time_series_subplot_pair.time_series.line_type,
+                        ),
                     ),
                     row=None
                     if self.number_of_subplots == 1
