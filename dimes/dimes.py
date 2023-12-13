@@ -1,6 +1,6 @@
 """Module for plotting time series data."""
 from pathlib import Path
-from typing import List
+from typing import List, Union
 import warnings
 from dataclasses import dataclass
 
@@ -15,9 +15,9 @@ class TimeSeriesData:
         self,
         data_values: list,
         name: str = "",
-        color: str | None = None,
+        color: Union[str, None] = None,
         is_visible: bool = True,
-        line_type: str | None = None,
+        line_type: Union[str, None] = None,
     ):
         self.is_visible = is_visible
         self.name = name
@@ -44,7 +44,9 @@ class TimeSeriesPlot:
         self.time_series_subplot_pairs: List[TimeSeriesPlot.TimeSeriesSubplotPair] = []
         self.is_finalized = False
 
-    def add_time_series(self, time_series: TimeSeriesData, subplot_number: int | None = None):
+    def add_time_series(
+        self, time_series: TimeSeriesData, subplot_number: Union[int, None] = None
+    ) -> None:
         """Add a TimeSeriesData object to the plot."""
         if subplot_number is None:
             subplot_number = self.number_of_subplots
@@ -74,10 +76,10 @@ class TimeSeriesPlot:
                         visible="legendonly"
                         if not time_series_subplot_pair.time_series.is_visible
                         else True,
-                        line=dict(
-                            color=time_series_subplot_pair.time_series.color,
-                            dash=time_series_subplot_pair.time_series.line_type,
-                        ),
+                        line={
+                            "color": time_series_subplot_pair.time_series.color,
+                            "dash": time_series_subplot_pair.time_series.line_type,
+                        },
                     ),
                     row=None
                     if self.number_of_subplots == 1
@@ -92,7 +94,7 @@ class TimeSeriesPlot:
 
             self.is_finalized = True
 
-    def write_html_plot(self, path: Path):
+    def write_html_plot(self, path: Path) -> None:
         "Write plots to html file at specified path."
         self.finalize_plot()
         self.fig.write_html(path)
