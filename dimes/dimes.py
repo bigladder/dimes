@@ -50,6 +50,8 @@ class TimeSeriesData:
 class TimeSeriesAxis:
     """Time series 'Y' axis. May contain multiple `TimeSeriesData` objects."""
 
+    # TODO: Make use of multiple Y axes on a single subplot: https://plotly.com/python/multiple-axes/
+
     def __init__(self, time_series: TimeSeriesData) -> None:
         self.title = str(time_series.dimension)
         self.units = time_series.display_units
@@ -123,7 +125,11 @@ class TimeSeriesPlot:
                             self.fig.add_trace(
                                 Scatter(
                                     x=self.time_values,
-                                    y=time_series.data_values,
+                                    y=koozie.convert(
+                                        time_series.data_values,
+                                        time_series.native_units,
+                                        axis.units,
+                                    ),
                                     name=time_series.name,
                                     yaxis=f"y{axis_id}",
                                     mode="lines",

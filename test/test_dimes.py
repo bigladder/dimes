@@ -68,6 +68,12 @@ def test_multi_plot():
             [x**2 for x in plot.time_values], name="Power", native_units="hp", display_units="W"
         )
     )
+    # TODO: Enable multiple axes on the same subplot
+    # plot.add_time_series(
+    #     TimeSeriesData(
+    #         [x for x in plot.time_values], name="Distance", native_units="ft", display_units="cm"
+    #     )
+    # )
     plot.add_time_series(TimeSeriesData([x**3 for x in plot.time_values]), subplot_number=2)
 
     plot.write_html_plot(Path(TESTING_DIRECTORY, "multi_plot.html"))
