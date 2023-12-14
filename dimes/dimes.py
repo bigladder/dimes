@@ -17,6 +17,7 @@ class TimeSeriesData:
         name: Union[str, None] = None,
         native_units: str = "",
         display_units: Union[str, None] = None,
+        dimension: Union[str, None] = None,
         color: Union[str, None] = None,
         line_type: Union[str, None] = None,
         is_visible: bool = True,
@@ -24,10 +25,14 @@ class TimeSeriesData:
         self.data_values = data_values
         self.native_units = native_units
         self.dimensionality = koozie.get_dimensionality(self.native_units)
-        if name is None:
-            self.name = str(self.dimensionality)
-        else:
-            self.name = name
+        self.name = name if name is not None else str(self.dimensionality)
+        self.dimension = (
+            dimension
+            if dimension is not None
+            else name
+            if name is not None
+            else str(self.dimensionality)
+        )
         if display_units is None:
             self.display_units = self.native_units
         else:
@@ -46,7 +51,7 @@ class TimeSeriesAxis:
     """Time series 'Y' axis. May contain multiple `TimeSeriesData` objects."""
 
     def __init__(self, time_series: TimeSeriesData) -> None:
-        self.title = None
+        self.title = str(time_series.dimension)
         self.units = time_series.display_units
         self.dimensionality = time_series.dimensionality
         self.time_series: List[TimeSeriesData] = [time_series]
@@ -62,7 +67,7 @@ class TimeSeriesSubplot:
     def __init__(self) -> None:
         self.axes: List[TimeSeriesAxis] = []
 
-    def add_time_series(self, time_series) -> None:
+    def add_time_series(self, time_series: TimeSeriesData) -> None:
         """Add `TimeSeriesData` to an axis"""
         # Add time series to existing axis of the same dimensionality (if it exists)
         for axis in self.axes:
@@ -107,10 +112,12 @@ class TimeSeriesPlot:
                 self.fig = make_subplots(
                     rows=number_of_subplots, shared_xaxes=True, vertical_spacing=0.05
                 )
+            absolute_axis_index = 0  # Used to track axes data in the plot
             for subplot_index, subplot in enumerate(self.subplots):
                 subplot_number = subplot_index + 1
                 if subplot is not None:
                     for axis in subplot.axes:
+                        axis_id = "" if absolute_axis_index == 0 else f"{absolute_axis_index + 1}"
                         for time_series in axis.time_series:
                             at_least_one_subplot = True
                             self.fig.add_trace(
@@ -118,6 +125,7 @@ class TimeSeriesPlot:
                                     x=self.time_values,
                                     y=time_series.data_values,
                                     name=time_series.name,
+                                    yaxis=f"y{axis_id}",
                                     mode="lines",
                                     visible="legendonly" if not time_series.is_visible else True,
                                     line={
@@ -128,6 +136,8 @@ class TimeSeriesPlot:
                                 row=None if number_of_subplots == 1 else subplot_number,
                                 col=None if number_of_subplots == 1 else 1,
                             )
+                        self.fig.layout[f"yaxis{axis_id}"]["title"] = axis.get_axis_label()
+                        absolute_axis_index += 1
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
             if not at_least_one_subplot:

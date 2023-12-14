@@ -58,3 +58,16 @@ def test_bad_units():
         )
 
     assert "[current] * [time]" in str(exception)
+
+
+def test_multi_plot():
+    """Test multiple time series on multiple axes in multiple subplots."""
+    plot = TimeSeriesPlot([1, 2, 3, 4, 5])
+    plot.add_time_series(
+        TimeSeriesData(
+            [x**2 for x in plot.time_values], name="Power", native_units="hp", display_units="W"
+        )
+    )
+    plot.add_time_series(TimeSeriesData([x**3 for x in plot.time_values]), subplot_number=2)
+
+    plot.write_html_plot(Path(TESTING_DIRECTORY, "multi_plot.html"))
