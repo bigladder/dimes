@@ -68,6 +68,9 @@ def test_multi_plot():
             [x**2 for x in plot.time_values], name="Power", native_units="hp", display_units="W"
         )
     )
+    plot.add_time_series(
+        TimeSeriesData([x * 10 for x in plot.time_values], name="Capacity", native_units="kBtu/h")
+    )
     # TODO: Enable multiple axes on the same subplot
     # plot.add_time_series(
     #     TimeSeriesData(
