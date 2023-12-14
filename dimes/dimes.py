@@ -14,11 +14,11 @@ class TimeSeriesData:
     def __init__(
         self,
         data_values: list,
-        name: str | None = None,
+        name: Union[str, None] = None,
         native_units: str = "",
-        display_units: str | None = None,
-        color: str | None = None,
-        line_type: str | None = None,
+        display_units: Union[str, None] = None,
+        color: Union[str, None] = None,
+        line_type: Union[str, None] = None,
         is_visible: bool = True,
     ):
         self.data_values = data_values
@@ -83,7 +83,9 @@ class TimeSeriesPlot:
         self.subplots: List[Union[TimeSeriesSubplot, None]] = [None]
         self.is_finalized = False
 
-    def add_time_series(self, time_series: TimeSeriesData, subplot_number: int | None = None):
+    def add_time_series(
+        self, time_series: TimeSeriesData, subplot_number: Union[int, None] = None
+    ) -> None:
         """Add a TimeSeriesData object to the plot."""
         if subplot_number is None:
             # Default case
@@ -118,23 +120,22 @@ class TimeSeriesPlot:
                                     name=time_series.name,
                                     mode="lines",
                                     visible="legendonly" if not time_series.is_visible else True,
-                                    line=dict(
-                                        color=time_series.color,
-                                        dash=time_series.line_type,
-                                    ),
+                                    line={
+                                        "color": time_series.color,
+                                        "dash": time_series.line_type,
+                                    },
                                 ),
                                 row=None if number_of_subplots == 1 else subplot_number,
                                 col=None if number_of_subplots == 1 else 1,
                             )
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
-
             if not at_least_one_subplot:
                 raise Exception("No time series data provided.")
 
             self.is_finalized = True
 
-    def write_html_plot(self, path: Path):
+    def write_html_plot(self, path: Path) -> None:
         "Write plots to html file at specified path."
         self.finalize_plot()
         self.fig.write_html(path)
