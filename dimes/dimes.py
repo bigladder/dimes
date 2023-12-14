@@ -1,8 +1,7 @@
 """Module for plotting time series data."""
 from pathlib import Path
-from typing import List
+from typing import List, Union
 import warnings
-from dataclasses import dataclass
 
 from plotly.graph_objects import Figure, Scatter  # type: ignore
 from plotly.subplots import make_subplots  # type: ignore
@@ -43,69 +42,95 @@ class TimeSeriesData:
         self.is_visible = is_visible
 
 
+class TimeSeriesAxis:
+    """Time series 'Y' axis. May contain multiple `TimeSeriesData` objects."""
+
+    def __init__(self, time_series: TimeSeriesData) -> None:
+        self.title = None
+        self.units = time_series.display_units
+        self.dimensionality = time_series.dimensionality
+        self.time_series: List[TimeSeriesData] = [time_series]
+
+    def get_axis_label(self) -> str:
+        """Make the string that appears as the axis label"""
+        return f"{self.title} [{self.units}]"
+
+
+class TimeSeriesSubplot:
+    """Time series subplot. May contain multiple `TimeSeriesAxis` objects."""
+
+    def __init__(self) -> None:
+        self.axes: List[TimeSeriesAxis] = []
+
+    def add_time_series(self, time_series) -> None:
+        """Add `TimeSeriesData` to an axis"""
+        # Add time series to existing axis of the same dimensionality (if it exists)
+        for axis in self.axes:
+            if axis.dimensionality == time_series.dimensionality:
+                time_series.display_units = axis.units
+                axis.time_series.append(time_series)
+                return
+        # Otherwise, make a new axis
+        self.axes.append(TimeSeriesAxis(time_series))
+
+
 class TimeSeriesPlot:
     """Time series plot."""
 
-    @dataclass
-    class TimeSeriesSubplotPair:
-        """Basic class to couple time series and subplot number"""
-
-        time_series: TimeSeriesData
-        subplot_number: int
-
     def __init__(self, time_values: list):
         self.fig = Figure()
-        # self.fig = make_subplots(rows=2,shared_xaxes=True)
         self.time_values = time_values
-        self.number_of_subplots = 1
-        self.time_series_subplot_pairs: List[TimeSeriesPlot.TimeSeriesSubplotPair] = []
+        self.subplots: List[Union[TimeSeriesSubplot, None]] = [None]
         self.is_finalized = False
 
     def add_time_series(self, time_series: TimeSeriesData, subplot_number: int | None = None):
         """Add a TimeSeriesData object to the plot."""
         if subplot_number is None:
-            subplot_number = self.number_of_subplots
+            # Default case
+            subplot_number = len(self.subplots)
         else:
-            self.number_of_subplots = max(subplot_number, self.number_of_subplots)
-        self.time_series_subplot_pairs.append(
-            TimeSeriesPlot.TimeSeriesSubplotPair(time_series, subplot_number)
-        )
+            if subplot_number > len(self.subplots):
+                # Make enough empty subplots
+                self.subplots += [None] * (subplot_number - len(self.subplots))
+        if self.subplots[subplot_number - 1] is None:
+            self.subplots[subplot_number - 1] = TimeSeriesSubplot()
+        self.subplots[subplot_number - 1].add_time_series(time_series)  # type: ignore[union-attr]
 
     def finalize_plot(self):
         """Once all TimeSeriesData objects have been added, generate plot and subplots."""
         if not self.is_finalized:
-            if not self.time_series_subplot_pairs:
-                raise Exception("No time series data provided.")
-            if self.number_of_subplots > 1:
+            at_least_one_subplot = False
+            number_of_subplots = len(self.subplots)
+            if len(self.subplots) > 1:
                 self.fig = make_subplots(
-                    rows=self.number_of_subplots, shared_xaxes=True, vertical_spacing=0.05
+                    rows=number_of_subplots, shared_xaxes=True, vertical_spacing=0.05
                 )
-            subplots_used = [False] * self.number_of_subplots
-            for time_series_subplot_pair in self.time_series_subplot_pairs:
-                self.fig.add_trace(
-                    Scatter(
-                        x=self.time_values,
-                        y=time_series_subplot_pair.time_series.data_values,
-                        name=time_series_subplot_pair.time_series.name,
-                        mode="lines",
-                        visible="legendonly"
-                        if not time_series_subplot_pair.time_series.is_visible
-                        else True,
-                        line=dict(
-                            color=time_series_subplot_pair.time_series.color,
-                            dash=time_series_subplot_pair.time_series.line_type,
-                        ),
-                    ),
-                    row=None
-                    if self.number_of_subplots == 1
-                    else time_series_subplot_pair.subplot_number,
-                    col=None if self.number_of_subplots == 1 else 1,
-                )
-                subplots_used[time_series_subplot_pair.subplot_number - 1] = True
+            for subplot_index, subplot in enumerate(self.subplots):
+                subplot_number = subplot_index + 1
+                if subplot is not None:
+                    for axis in subplot.axes:
+                        for time_series in axis.time_series:
+                            at_least_one_subplot = True
+                            self.fig.add_trace(
+                                Scatter(
+                                    x=self.time_values,
+                                    y=time_series.data_values,
+                                    name=time_series.name,
+                                    mode="lines",
+                                    visible="legendonly" if not time_series.is_visible else True,
+                                    line=dict(
+                                        color=time_series.color,
+                                        dash=time_series.line_type,
+                                    ),
+                                ),
+                                row=None if number_of_subplots == 1 else subplot_number,
+                                col=None if number_of_subplots == 1 else 1,
+                            )
+                else:
+                    warnings.warn(f"Subplot {subplot_number} is unused.")
 
-            for i, subplot_used in enumerate(subplots_used):
-                if not subplot_used:
-                    warnings.warn(f"Subplot {i + 1} is unused.")
+            if not at_least_one_subplot:
+                raise Exception("No time series data provided.")
 
             self.is_finalized = True
 
