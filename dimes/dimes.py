@@ -23,6 +23,23 @@ class LineProperties:
 class TimeSeriesData:
     """Time series data."""
 
+    class LineMode:
+        def determine_line_mode(
+            self, marker_symbol, marker_size, marker_line_color, marker_fill_color
+        ):
+            if all(
+                variables is None
+                for variables in (
+                    marker_size,
+                    marker_symbol,
+                    marker_line_color,
+                    marker_fill_color,
+                )
+            ):
+                return "lines"
+            else:
+                return "lines+markers"
+
     def __init__(
         self,
         data_values: list,
@@ -54,6 +71,13 @@ class TimeSeriesData:
                 )
 
         self.line_properties = line_properties
+
+        self.mode = self.LineMode().determine_line_mode(
+            line_properties.marker_symbol,
+            line_properties.marker_size,
+            line_properties.marker_line_color,
+            line_properties.marker_fill_color,
+        )
 
 
 class TimeSeriesAxis:
@@ -141,18 +165,10 @@ class TimeSeriesPlot:
                                     ),
                                     name=time_series.name,
                                     yaxis=f"y{axis_id}",
-                                    mode="lines"
-                                    if all(
-                                        variables is None
-                                        for variables in (
-                                            time_series.marker_size,
-                                            time_series.marker_symbol,
-                                            time_series.marker_line_color,
-                                            time_series.marker_fill_color,
-                                        )
-                                    )
-                                    else "lines+markers",
-                                    visible="legendonly" if not time_series.is_visible else True,
+                                    mode=time_series.mode,
+                                    visible="legendonly"
+                                    if not time_series.line_properties.is_visible
+                                    else True,
                                     line={
                                         "color": time_series.line_properties.color,
                                         "dash": time_series.line_properties.line_type,
