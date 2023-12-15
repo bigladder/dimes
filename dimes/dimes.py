@@ -20,6 +20,10 @@ class TimeSeriesData:
         dimension: Union[str, None] = None,
         color: Union[str, None] = None,
         line_type: Union[str, None] = None,
+        marker_symbol: Union[str, None] = None,
+        marker_size: Union[int, None] = None,
+        marker_line_color: Union[str, None] = None,
+        marker_fill_color: Union[str, None] = None,
         is_visible: bool = True,
     ):
         self.data_values = data_values
@@ -45,6 +49,10 @@ class TimeSeriesData:
         self.color = color
         self.line_type = line_type
         self.is_visible = is_visible
+        self.marker_symbol = marker_symbol
+        self.marker_size = marker_size
+        self.marker_line_color = marker_line_color
+        self.marker_fill_color = marker_fill_color
 
 
 class TimeSeriesAxis:
@@ -132,11 +140,30 @@ class TimeSeriesPlot:
                                     ),
                                     name=time_series.name,
                                     yaxis=f"y{axis_id}",
-                                    mode="lines",
+                                    mode="lines"
+                                    if all(
+                                        variables is None
+                                        for variables in (
+                                            time_series.marker_size,
+                                            time_series.marker_symbol,
+                                            time_series.marker_line_color,
+                                            time_series.marker_fill_color,
+                                        )
+                                    )
+                                    else "lines+markers",
                                     visible="legendonly" if not time_series.is_visible else True,
                                     line={
                                         "color": time_series.color,
                                         "dash": time_series.line_type,
+                                    },
+                                    marker={
+                                        "size": time_series.marker_size,
+                                        "color": time_series.marker_fill_color,
+                                        "symbol": time_series.marker_symbol,
+                                        "line": {
+                                            "color": time_series.marker_line_color,
+                                            "width": 2,
+                                        },
                                     },
                                 ),
                                 row=None if number_of_subplots == 1 else subplot_number,
