@@ -97,6 +97,7 @@ def test_basic_marker():
             ),
         )
     )
+    plot.write_html_plot(Path(TESTING_DIRECTORY, "basic_marker.html"))
 
 
 def test_missing_marker_symbol():
