@@ -85,7 +85,7 @@ class TimeSeriesPlot:
     """Time series plot."""
 
     def __init__(self, time_values: list):
-        self.fig = Figure()
+        self.figure = Figure()
         self.time_values = time_values
         self.subplots: List[Union[TimeSeriesSubplot, None]] = [None]
         self.is_finalized = False
