@@ -110,10 +110,6 @@ class TimeSeriesPlot:
         if not self.is_finalized:
             at_least_one_subplot = False
             number_of_subplots = len(self.subplots)
-            # if number_of_subplots > 1:
-            #     self.figure = make_subplots(
-            #         rows=number_of_subplots, shared_xaxes=True, vertical_spacing=0.05
-            #     )
             subplot_domains = get_subplot_domains(number_of_subplots)
             absolute_axis_index = 0  # Used to track axes data in the plot
             for subplot_index, subplot in enumerate(self.subplots):
@@ -136,6 +132,7 @@ class TimeSeriesPlot:
                                     ),
                                     name=time_series.name,
                                     yaxis=f"y{y_axis_id}",
+                                    xaxis=f"x{x_axis_id}",
                                     mode="lines",
                                     visible="legendonly" if not time_series.is_visible else True,
                                     line={
@@ -143,8 +140,6 @@ class TimeSeriesPlot:
                                         "dash": time_series.line_type,
                                     },
                                 ),
-                                # row=None if number_of_subplots == 1 else subplot_number,
-                                # col=None if number_of_subplots == 1 else 1,
                             )
                         is_base_y_axis = subplot_base_y_axis_id != y_axis_id
                         self.figure.layout[f"yaxis{y_axis_id}"] = {
@@ -167,7 +162,7 @@ class TimeSeriesPlot:
                         "matches": f"x{number_of_subplots}"
                         if subplot_number < number_of_subplots
                         else None,
-                        "showticklabels": True if is_last_subplot else False,
+                        "showticklabels": None if is_last_subplot else False,
                     }
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
