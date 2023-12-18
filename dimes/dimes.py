@@ -2,14 +2,43 @@
 from pathlib import Path
 from typing import List, Union
 import warnings
+from dataclasses import dataclass
 
 from plotly.graph_objects import Figure, Scatter  # type: ignore
 from plotly.subplots import make_subplots  # type: ignore
 import koozie
 
 
+@dataclass
+class LineProperties:
+    color: Union[str, None] = None
+    line_type: Union[str, None] = None
+    marker_symbol: Union[str, None] = None
+    marker_size: Union[int, None] = None
+    marker_line_color: Union[str, None] = None
+    marker_fill_color: Union[str, None] = None
+    is_visible: bool = True
+
+
 class TimeSeriesData:
     """Time series data."""
+
+    class LineMode:
+        def determine_line_mode(
+            self, marker_symbol, marker_size, marker_line_color, marker_fill_color
+        ):
+            if all(
+                variables is None
+                for variables in (
+                    marker_size,
+                    marker_symbol,
+                    marker_line_color,
+                    marker_fill_color,
+                )
+            ):
+                return "lines"
+            else:
+                return "lines+markers"
 
     def __init__(
         self,
@@ -18,9 +47,7 @@ class TimeSeriesData:
         native_units: str = "",
         display_units: Union[str, None] = None,
         dimension: Union[str, None] = None,
-        color: Union[str, None] = None,
-        line_type: Union[str, None] = None,
-        is_visible: bool = True,
+        line_properties: LineProperties = LineProperties(),
     ):
         self.data_values = data_values
         self.native_units = native_units
@@ -42,9 +69,15 @@ class TimeSeriesData:
                 raise Exception(
                     f"display_units, {self.display_units}, dimensionality ({display_units_dimensionality}) does not match native_units, {self.native_units}, dimensionality ({self.dimensionality})"
                 )
-        self.color = color
-        self.line_type = line_type
-        self.is_visible = is_visible
+
+        self.line_properties = line_properties
+
+        self.mode = self.LineMode().determine_line_mode(
+            line_properties.marker_symbol,
+            line_properties.marker_size,
+            line_properties.marker_line_color,
+            line_properties.marker_fill_color,
+        )
 
 
 class TimeSeriesAxis:
@@ -132,11 +165,22 @@ class TimeSeriesPlot:
                                     ),
                                     name=time_series.name,
                                     yaxis=f"y{axis_id}",
-                                    mode="lines",
-                                    visible="legendonly" if not time_series.is_visible else True,
+                                    mode=time_series.mode,
+                                    visible="legendonly"
+                                    if not time_series.line_properties.is_visible
+                                    else True,
                                     line={
-                                        "color": time_series.color,
-                                        "dash": time_series.line_type,
+                                        "color": time_series.line_properties.color,
+                                        "dash": time_series.line_properties.line_type,
+                                    },
+                                    marker={
+                                        "size": time_series.line_properties.marker_size,
+                                        "color": time_series.line_properties.marker_fill_color,
+                                        "symbol": time_series.line_properties.marker_symbol,
+                                        "line": {
+                                            "color": time_series.line_properties.marker_line_color,
+                                            "width": 2,
+                                        },
                                     },
                                 ),
                                 row=None if number_of_subplots == 1 else subplot_number,
