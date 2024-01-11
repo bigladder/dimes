@@ -19,26 +19,23 @@ class LineProperties:
     marker_fill_color: Union[str, None] = None
     is_visible: bool = True
 
+    def get_line_mode(self):
+        if all(
+            variables is None
+            for variables in (
+                self.marker_size,
+                self.marker_symbol,
+                self.marker_line_color,
+                self.marker_fill_color,
+            )
+        ):
+            return "lines"
+        else:
+            return "lines+markers"
+
 
 class TimeSeriesData:
     """Time series data."""
-
-    class LineMode:
-        def determine_line_mode(
-            self, marker_symbol, marker_size, marker_line_color, marker_fill_color
-        ):
-            if all(
-                variables is None
-                for variables in (
-                    marker_size,
-                    marker_symbol,
-                    marker_line_color,
-                    marker_fill_color,
-                )
-            ):
-                return "lines"
-            else:
-                return "lines+markers"
 
     def __init__(
         self,
@@ -71,13 +68,6 @@ class TimeSeriesData:
                 )
 
         self.line_properties = line_properties
-
-        self.mode = self.LineMode().determine_line_mode(
-            line_properties.marker_symbol,
-            line_properties.marker_size,
-            line_properties.marker_line_color,
-            line_properties.marker_fill_color,
-        )
 
 
 class TimeSeriesAxis:
@@ -165,7 +155,7 @@ class TimeSeriesPlot:
                                     ),
                                     name=time_series.name,
                                     yaxis=f"y{axis_id}",
-                                    mode=time_series.mode,
+                                    mode=time_series.line_properties.get_line_mode(),
                                     visible="legendonly"
                                     if not time_series.line_properties.is_visible
                                     else True,
