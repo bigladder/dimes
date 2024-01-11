@@ -101,9 +101,10 @@ class TimeSeriesPlot:
             if subplot_number > len(self.subplots):
                 # Make enough empty subplots
                 self.subplots += [None] * (subplot_number - len(self.subplots))
-        if self.subplots[subplot_number - 1] is None:
-            self.subplots[subplot_number - 1] = TimeSeriesSubplot()
-        self.subplots[subplot_number - 1].add_time_series(time_series)  # type: ignore[union-attr]
+        subplot_index = subplot_number - 1
+        if self.subplots[subplot_index] is None:
+            self.subplots[subplot_index] = TimeSeriesSubplot()
+        self.subplots[subplot_index].add_time_series(time_series)  # type: ignore[union-attr]
 
     def finalize_plot(self):
         """Once all TimeSeriesData objects have been added, generate plot and subplots."""
@@ -141,15 +142,17 @@ class TimeSeriesPlot:
                                     },
                                 ),
                             )
-                        is_base_y_axis = subplot_base_y_axis_id != y_axis_id
+                        is_base_y_axis = subplot_base_y_axis_id == y_axis_id
                         self.figure.layout[f"yaxis{y_axis_id}"] = {
                             "title": axis.get_axis_label(),
-                            "domain": subplot_domains[subplot_number - 1]
+                            "domain": subplot_domains[subplot_index]
                             if subplot_base_y_axis_id == y_axis_id
                             else None,
                             "side": y_axis_side,
                             "anchor": f"x{x_axis_id}",
-                            "overlaying": f"y{subplot_base_y_axis_id}" if is_base_y_axis else None,
+                            "overlaying": f"y{subplot_base_y_axis_id}"
+                            if not is_base_y_axis
+                            else None,
                             "tickmode": "sync" if not is_base_y_axis else None,
                             "autoshift": True if axis_number > 1 else None,
                         }
