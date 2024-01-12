@@ -1,6 +1,6 @@
 """Module for plotting time series data."""
 from pathlib import Path
-from typing import List, Union
+from typing import List, Tuple, Union
 import warnings
 
 from plotly.graph_objects import Figure, Scatter  # type: ignore
@@ -85,7 +85,7 @@ class TimeSeriesPlot:
     """Time series plot."""
 
     def __init__(self, time_values: list):
-        self.fig = Figure()
+        self.figure = Figure()
         self.time_values = time_values
         self.subplots: List[Union[TimeSeriesSubplot, None]] = [None]
         self.is_finalized = False
@@ -101,28 +101,29 @@ class TimeSeriesPlot:
             if subplot_number > len(self.subplots):
                 # Make enough empty subplots
                 self.subplots += [None] * (subplot_number - len(self.subplots))
-        if self.subplots[subplot_number - 1] is None:
-            self.subplots[subplot_number - 1] = TimeSeriesSubplot()
-        self.subplots[subplot_number - 1].add_time_series(time_series)  # type: ignore[union-attr]
+        subplot_index = subplot_number - 1
+        if self.subplots[subplot_index] is None:
+            self.subplots[subplot_index] = TimeSeriesSubplot()
+        self.subplots[subplot_index].add_time_series(time_series)  # type: ignore[union-attr]
 
     def finalize_plot(self):
         """Once all TimeSeriesData objects have been added, generate plot and subplots."""
         if not self.is_finalized:
             at_least_one_subplot = False
             number_of_subplots = len(self.subplots)
-            if len(self.subplots) > 1:
-                self.fig = make_subplots(
-                    rows=number_of_subplots, shared_xaxes=True, vertical_spacing=0.05
-                )
+            subplot_domains = get_subplot_domains(number_of_subplots)
             absolute_axis_index = 0  # Used to track axes data in the plot
             for subplot_index, subplot in enumerate(self.subplots):
                 subplot_number = subplot_index + 1
+                x_axis_id = subplot_number
+                subplot_base_y_axis_id = absolute_axis_index + 1
                 if subplot is not None:
-                    for axis in subplot.axes:
-                        axis_id = "" if absolute_axis_index == 0 else f"{absolute_axis_index + 1}"
+                    y_axis_side = "left"
+                    for axis_number, axis in enumerate(subplot.axes):
+                        y_axis_id = absolute_axis_index + 1
                         for time_series in axis.time_series:
                             at_least_one_subplot = True
-                            self.fig.add_trace(
+                            self.figure.add_trace(
                                 Scatter(
                                     x=self.time_values,
                                     y=koozie.convert(
@@ -131,7 +132,8 @@ class TimeSeriesPlot:
                                         axis.units,
                                     ),
                                     name=time_series.name,
-                                    yaxis=f"y{axis_id}",
+                                    yaxis=f"y{y_axis_id}",
+                                    xaxis=f"x{x_axis_id}",
                                     mode="lines",
                                     visible="legendonly" if not time_series.is_visible else True,
                                     line={
@@ -139,11 +141,32 @@ class TimeSeriesPlot:
                                         "dash": time_series.line_type,
                                     },
                                 ),
-                                row=None if number_of_subplots == 1 else subplot_number,
-                                col=None if number_of_subplots == 1 else 1,
                             )
-                        self.fig.layout[f"yaxis{axis_id}"]["title"] = axis.get_axis_label()
+                        is_base_y_axis = subplot_base_y_axis_id == y_axis_id
+                        self.figure.layout[f"yaxis{y_axis_id}"] = {
+                            "title": axis.get_axis_label(),
+                            "domain": subplot_domains[subplot_index]
+                            if subplot_base_y_axis_id == y_axis_id
+                            else None,
+                            "side": y_axis_side,
+                            "anchor": f"x{x_axis_id}",
+                            "overlaying": f"y{subplot_base_y_axis_id}"
+                            if not is_base_y_axis
+                            else None,
+                            "tickmode": "sync" if not is_base_y_axis else None,
+                            "autoshift": True if axis_number > 1 else None,
+                        }
                         absolute_axis_index += 1
+                        y_axis_side = "right" if y_axis_side == "left" else "left"
+                    is_last_subplot = subplot_number == number_of_subplots
+                    self.figure.layout[f"xaxis{x_axis_id}"] = {
+                        "anchor": f"y{subplot_base_y_axis_id}",
+                        "domain": [0.0, 1.0],
+                        "matches": f"x{number_of_subplots}"
+                        if subplot_number < number_of_subplots
+                        else None,
+                        "showticklabels": None if is_last_subplot else False,
+                    }
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
             if not at_least_one_subplot:
@@ -154,4 +177,17 @@ class TimeSeriesPlot:
     def write_html_plot(self, path: Path) -> None:
         "Write plots to html file at specified path."
         self.finalize_plot()
-        self.fig.write_html(path)
+        self.figure.write_html(path)
+
+
+def get_subplot_domains(number_of_subplots: int, gap: float = 0.05) -> List[Tuple[float, float]]:
+    """Calculate and return the 'Y' domain ranges for a given number of subplots with the specified gap size."""
+    subplot_height = (1.0 - gap) / number_of_subplots
+    subplot_domains = []
+    for subplot_number in range(number_of_subplots):
+        subplot_bottom = subplot_number * (subplot_height + gap)
+        subplot_top = subplot_bottom + subplot_height
+        subplot_domains.append((subplot_bottom, subplot_top))
+
+    subplot_domains.reverse()
+    return subplot_domains
