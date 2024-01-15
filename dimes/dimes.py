@@ -44,12 +44,18 @@ class TimeSeriesData:
         native_units: str = "",
         display_units: Union[str, None] = None,
         dimension: Union[str, None] = None,
+        color: Union[str, None] = None,
         line_properties: LineProperties = LineProperties(),
+        is_visible: bool = True,
     ):
         self.data_values = data_values
         self.native_units = native_units
         self.dimensionality = koozie.get_dimensionality(self.native_units)
-        self.name = name if name is not None else str(self.dimensionality)
+        self.name = (
+            name
+            if name is not None
+            else str(self.dimensionality).title().replace("[", "").replace("]", "")
+        )
         self.dimension = (
             dimension
             if dimension is not None
@@ -57,33 +63,36 @@ class TimeSeriesData:
             if name is not None
             else str(self.dimensionality)
         )
-        if display_units is None:
+        self.set_display_units(display_units)
+        self.color = color
+        self.line_properties = line_properties
+        self.is_visible = is_visible
+
+    def set_display_units(self, units: Union[str, None] = None) -> None:
+        """Set the display units for this axis"""
+        if units is None:
             self.display_units = self.native_units
         else:
-            self.display_units = display_units
+            self.display_units = units
             display_units_dimensionality = koozie.get_dimensionality(self.display_units)
             if self.dimensionality != display_units_dimensionality:
                 raise Exception(
                     f"display_units, {self.display_units}, dimensionality ({display_units_dimensionality}) does not match native_units, {self.native_units}, dimensionality ({self.dimensionality})"
                 )
 
-        self.line_properties = line_properties
-
 
 class TimeSeriesAxis:
     """Time series 'Y' axis. May contain multiple `TimeSeriesData` objects."""
 
-    # TODO: Make use of multiple Y axes on a single subplot: https://plotly.com/python/multiple-axes/
-
-    def __init__(self, time_series: TimeSeriesData) -> None:
-        self.title = str(time_series.dimension)
+    def __init__(self, time_series: TimeSeriesData, name: Union[str, None]) -> None:
+        self.name = name
         self.units = time_series.display_units
         self.dimensionality = time_series.dimensionality
         self.time_series: List[TimeSeriesData] = [time_series]
 
     def get_axis_label(self) -> str:
         """Make the string that appears as the axis label"""
-        return f"{self.title} [{self.units}]"
+        return f"{self.name} [{self.units}]"
 
 
 class TimeSeriesSubplot:
@@ -92,16 +101,34 @@ class TimeSeriesSubplot:
     def __init__(self) -> None:
         self.axes: List[TimeSeriesAxis] = []
 
-    def add_time_series(self, time_series: TimeSeriesData) -> None:
+    def add_time_series(
+        self, time_series: TimeSeriesData, axis_name: Union[str, None] = None
+    ) -> None:
         """Add `TimeSeriesData` to an axis"""
-        # Add time series to existing axis of the same dimensionality (if it exists)
-        for axis in self.axes:
-            if axis.dimensionality == time_series.dimensionality:
-                time_series.display_units = axis.units
-                axis.time_series.append(time_series)
-                return
+        if axis_name is not None:
+            # Add time series to existing axis of the same name if it exists
+            for axis in self.axes:
+                if axis.name == axis_name:
+                    self.add_time_series_to_existing_axis(time_series, axis)
+                    return
+        else:
+            # Add time series to existing axis of the dimensionality if it exists
+            for axis in self.axes:
+                if axis.dimensionality == time_series.dimensionality:
+                    self.add_time_series_to_existing_axis(time_series, axis)
+                    return
+            axis_name = time_series.name
+
         # Otherwise, make a new axis
-        self.axes.append(TimeSeriesAxis(time_series))
+        self.axes.append(TimeSeriesAxis(time_series, axis_name))
+
+    def add_time_series_to_existing_axis(
+        self, time_series: TimeSeriesData, axis: TimeSeriesAxis
+    ) -> None:
+        """Add `TimeSeriesData` to an existing `TimeSeriesAxis`"""
+        # Update time series display units to match the axis
+        time_series.set_display_units(axis.units)
+        axis.time_series.append(time_series)
 
 
 class TimeSeriesPlot:
@@ -114,7 +141,10 @@ class TimeSeriesPlot:
         self.is_finalized = False
 
     def add_time_series(
-        self, time_series: TimeSeriesData, subplot_number: Union[int, None] = None
+        self,
+        time_series: TimeSeriesData,
+        subplot_number: Union[int, None] = None,
+        axis_name: Union[str, None] = None,
     ) -> None:
         """Add a TimeSeriesData object to the plot."""
         if subplot_number is None:
@@ -127,7 +157,7 @@ class TimeSeriesPlot:
         subplot_index = subplot_number - 1
         if self.subplots[subplot_index] is None:
             self.subplots[subplot_index] = TimeSeriesSubplot()
-        self.subplots[subplot_index].add_time_series(time_series)  # type: ignore[union-attr]
+        self.subplots[subplot_index].add_time_series(time_series, axis_name)  # type: ignore[union-attr]
 
     def finalize_plot(self):
         """Once all TimeSeriesData objects have been added, generate plot and subplots."""

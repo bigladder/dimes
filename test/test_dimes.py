@@ -66,17 +66,23 @@ def test_multi_plot():
     plot.add_time_series(
         TimeSeriesData(
             [x**2 for x in plot.time_values], name="Power", native_units="hp", display_units="W"
-        )
+        ),
+        axis_name="Power or Capacity",
     )
+    # Axis automatically determined by dimensionality
     plot.add_time_series(
         TimeSeriesData([x * 10 for x in plot.time_values], name="Capacity", native_units="kBtu/h")
     )
+    # Time series and axis will get name from dimensionality
     plot.add_time_series(
-        TimeSeriesData(
-            [x for x in plot.time_values], name="Distance", native_units="ft", display_units="cm"
-        )
+        TimeSeriesData([x for x in plot.time_values], native_units="ft", display_units="cm")
     )
-    plot.add_time_series(TimeSeriesData([x**3 for x in plot.time_values]), subplot_number=2)
+    # Explicitly name time series and axis
+    plot.add_time_series(
+        TimeSeriesData([x**3 for x in plot.time_values], name="Number of Apples"),
+        subplot_number=2,
+        axis_name="Quantity",
+    )
 
     plot.write_html_plot(Path(TESTING_DIRECTORY, "multi_plot.html"))
 
