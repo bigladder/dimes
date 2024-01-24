@@ -209,7 +209,7 @@ class TimeSeriesPlot:
 
 def get_subplot_domains(number_of_subplots: int, gap: float = 0.05) -> List[Tuple[float, float]]:
     """Calculate and return the 'Y' domain ranges for a given number of subplots with the specified gap size."""
-    subplot_height = (1.0 - gap) / number_of_subplots
+    subplot_height = (1.0 - gap * (number_of_subplots - 1)) / number_of_subplots
     subplot_domains = []
     for subplot_number in range(number_of_subplots):
         subplot_bottom = subplot_number * (subplot_height + gap)
