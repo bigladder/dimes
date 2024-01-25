@@ -75,14 +75,24 @@ def test_multi_plot():
     )
     # Time series and axis will get name from dimensionality
     plot.add_time_series(
-        TimeSeriesData([x for x in plot.time_values], native_units="ft", display_units="cm"),
-        subplot_number=2
+        TimeSeriesData([x for x in plot.time_values], native_units="ft", display_units="cm")
     )
     # Explicitly name time series and axis
     plot.add_time_series(
         TimeSeriesData([x**3 for x in plot.time_values], name="Number of Apples"),
-        subplot_number=3,
+        subplot_number=2,
         axis_name="Quantity",
+    )
+    # Define dimension for force and set visibility to False
+    plot.add_time_series(
+        TimeSeriesData(
+            [x**4 for x in plot.time_values],
+            name="Force",
+            dimension="[mass] * [length] / [time] ** 2",
+            is_visible=False,
+        ),
+        axis_name="Force",
+        subplot_number=3,
     )
 
     plot.write_html_plot(Path(TESTING_DIRECTORY, "multi_plot.html"))
