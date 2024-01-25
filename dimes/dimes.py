@@ -2,10 +2,36 @@
 from pathlib import Path
 from typing import List, Tuple, Union
 import warnings
+from dataclasses import dataclass
 
 from plotly.graph_objects import Figure, Scatter  # type: ignore
 from plotly.subplots import make_subplots  # type: ignore
 import koozie
+
+
+@dataclass
+class LineProperties:
+    color: Union[str, None] = None
+    line_type: Union[str, None] = None
+    marker_symbol: Union[str, None] = None
+    marker_size: Union[int, None] = None
+    marker_line_color: Union[str, None] = None
+    marker_fill_color: Union[str, None] = None
+    is_visible: bool = True
+
+    def get_line_mode(self):
+        if all(
+            variables is None
+            for variables in (
+                self.marker_size,
+                self.marker_symbol,
+                self.marker_line_color,
+                self.marker_fill_color,
+            )
+        ):
+            return "lines"
+        else:
+            return "lines+markers"
 
 
 class TimeSeriesData:
@@ -18,7 +44,7 @@ class TimeSeriesData:
         native_units: str = "",
         display_units: Union[str, None] = None,
         color: Union[str, None] = None,
-        line_type: Union[str, None] = None,
+        line_properties: LineProperties = LineProperties(),
         is_visible: bool = True,
     ):
         self.data_values = data_values
@@ -31,7 +57,7 @@ class TimeSeriesData:
         )
         self.set_display_units(display_units)
         self.color = color
-        self.line_type = line_type
+        self.line_properties = line_properties
         self.is_visible = is_visible
 
     def set_display_units(self, units: Union[str, None] = None) -> None:
@@ -153,11 +179,22 @@ class TimeSeriesPlot:
                                     name=time_series.name,
                                     yaxis=f"y{y_axis_id}",
                                     xaxis=f"x{x_axis_id}",
-                                    mode="lines",
-                                    visible="legendonly" if not time_series.is_visible else True,
+                                    mode=time_series.line_properties.get_line_mode(),
+                                    visible="legendonly"
+                                    if not time_series.line_properties.is_visible
+                                    else True,
                                     line={
-                                        "color": time_series.color,
-                                        "dash": time_series.line_type,
+                                        "color": time_series.line_properties.color,
+                                        "dash": time_series.line_properties.line_type,
+                                    },
+                                    marker={
+                                        "size": time_series.line_properties.marker_size,
+                                        "color": time_series.line_properties.marker_fill_color,
+                                        "symbol": time_series.line_properties.marker_symbol,
+                                        "line": {
+                                            "color": time_series.line_properties.marker_line_color,
+                                            "width": 2,
+                                        },
                                     },
                                 ),
                             )

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 import pytest
-from dimes import TimeSeriesPlot, TimeSeriesData
+from dimes import TimeSeriesPlot, TimeSeriesData, LineProperties
 
 TESTING_DIRECTORY = Path("test_outputs")
 TESTING_DIRECTORY.mkdir(exist_ok=True)
@@ -100,3 +100,38 @@ def test_multi_plot():
     )
 
     plot.write_html_plot(Path(TESTING_DIRECTORY, "multi_plot.html"))
+
+
+def test_basic_marker():
+    """Test basic marker plot"""
+    plot = TimeSeriesPlot([1, 2, 3, 4, 5])
+    plot.add_time_series(
+        TimeSeriesData(
+            [x**2 for x in plot.time_values],
+            line_properties=LineProperties(
+                color="blue",
+                marker_symbol="circle",
+                marker_size=5,
+                marker_line_color="black",
+                marker_fill_color="white",
+            ),
+        )
+    )
+    plot.write_html_plot(Path(TESTING_DIRECTORY, "basic_marker.html"))
+
+
+def test_missing_marker_symbol():
+    """Test missing marker symbol, default symbol should be 'circle'"""
+    plot = TimeSeriesPlot([1, 2, 3, 4, 5])
+    plot.add_time_series(
+        TimeSeriesData(
+            [x**2 for x in plot.time_values],
+            line_properties=LineProperties(
+                color="blue",
+                marker_size=5,
+                marker_line_color="black",
+                marker_fill_color="white",
+            ),
+        )
+    )
+    plot.write_html_plot(Path(TESTING_DIRECTORY, "missing_marker_symbol.html"))
