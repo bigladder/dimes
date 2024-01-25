@@ -63,35 +63,39 @@ def test_bad_units():
 def test_multi_plot():
     """Test multiple time series on multiple axes in multiple subplots."""
     plot = TimeSeriesPlot([1, 2, 3, 4, 5])
+    # Time series & axis names explicit, subplot default to 1
     plot.add_time_series(
         TimeSeriesData(
             [x**2 for x in plot.time_values], name="Power", native_units="hp", display_units="W"
         ),
         axis_name="Power or Capacity",
     )
-    # Axis automatically determined by dimensionality
+    # Time series name explicit, axis automatically determined by dimensionality, subplot default to 1
     plot.add_time_series(
-        TimeSeriesData([x * 10 for x in plot.time_values], name="Capacity", native_units="kBtu/h")
+        TimeSeriesData(
+            [x * 10 for x in plot.time_values],
+            name="Capacity",
+            native_units="kBtu/h",
+            is_visible=False,
+        )
     )
-    # Time series and axis will get name from dimensionality
+    # Time series and axis will get name from dimensionality, subplot default to 1, new axis for new dimension on existing subplot
     plot.add_time_series(
         TimeSeriesData([x for x in plot.time_values], native_units="ft", display_units="cm")
     )
-    # Explicitly name time series and axis
+    # Time series & axis names and subplot number are all explicit
     plot.add_time_series(
         TimeSeriesData([x**3 for x in plot.time_values], name="Number of Apples"),
         subplot_number=2,
         axis_name="Quantity",
     )
-    # Define dimension for force and set visibility to False
+    # Time series and subplot number explicit, axis name automatically determined from time series name
     plot.add_time_series(
         TimeSeriesData(
             [x**4 for x in plot.time_values],
             name="Force",
-            dimension="[mass] * [length] / [time] ** 2",
-            is_visible=False,
+            native_units="lbf",
         ),
-        axis_name="Force",
         subplot_number=3,
     )
 
