@@ -1,2 +1,4 @@
 """dimes public interface"""
-from .dimes import TimeSeriesPlot, TimeSeriesData, LineProperties
+from .common import LineProperties
+from .timeseries import TimeSeriesPlot, TimeSeriesData
+from .griddeddata import GridAxis, GridPointData, RegularGridData
