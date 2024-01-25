@@ -43,7 +43,6 @@ class TimeSeriesData:
         name: Union[str, None] = None,
         native_units: str = "",
         display_units: Union[str, None] = None,
-        dimension: Union[str, None] = None,
         color: Union[str, None] = None,
         line_properties: LineProperties = LineProperties(),
         is_visible: bool = True,
@@ -55,13 +54,6 @@ class TimeSeriesData:
             name
             if name is not None
             else str(self.dimensionality).title().replace("[", "").replace("]", "")
-        )
-        self.dimension = (
-            dimension
-            if dimension is not None
-            else name
-            if name is not None
-            else str(self.dimensionality)
         )
         self.set_display_units(display_units)
         self.color = color
@@ -246,7 +238,7 @@ class TimeSeriesPlot:
 
 def get_subplot_domains(number_of_subplots: int, gap: float = 0.05) -> List[Tuple[float, float]]:
     """Calculate and return the 'Y' domain ranges for a given number of subplots with the specified gap size."""
-    subplot_height = (1.0 - gap) / number_of_subplots
+    subplot_height = (1.0 - gap * (number_of_subplots - 1)) / number_of_subplots
     subplot_domains = []
     for subplot_number in range(number_of_subplots):
         subplot_bottom = subplot_number * (subplot_height + gap)
