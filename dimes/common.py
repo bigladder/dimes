@@ -140,6 +140,11 @@ class DimensionalPlot:
         self.x_axis_values = x_axis_values
         self.subplots: List[Union[DimensionalSubplot, None]] = [None]
         self.is_finalized = False
+        self.LINE_WIDTH = 1.5
+        self.WHITE = "white"
+        self.BLACK = "black"
+        self.GREY = "rgba(128,128,128,0.3)"
+
 
     def add_display_data(
         self,
@@ -167,6 +172,8 @@ class DimensionalPlot:
             number_of_subplots = len(self.subplots)
             subplot_domains = get_subplot_domains(number_of_subplots)
             absolute_axis_index = 0  # Used to track axes data in the plot
+            self.figure.layout["plot_bgcolor"] = self.WHITE
+            self.figure.layout["font_color"] = self.BLACK
             for subplot_index, subplot in enumerate(self.subplots):
                 subplot_number = subplot_index + 1
                 x_axis_id = subplot_number
@@ -224,6 +231,16 @@ class DimensionalPlot:
                             ),
                             "tickmode": "sync" if not is_base_y_axis else None,
                             "autoshift": True if axis_number > 1 else None,
+                            "mirror": True,
+                            "linecolor":self.BLACK,
+                            "linewidth":self.LINE_WIDTH,
+                            "showgrid":True,
+                            "gridcolor":self.GREY,
+                            "gridwidth":self.LINE_WIDTH,
+                            "zeroline":True,
+                            "zerolinecolor":self.GREY,
+                            "zerolinewidth":self.LINE_WIDTH,
+
                         }
                         absolute_axis_index += 1
                         y_axis_side = "right" if y_axis_side == "left" else "left"
@@ -237,6 +254,16 @@ class DimensionalPlot:
                             else None
                         ),
                         "showticklabels": None if is_last_subplot else False,
+                        "ticks":"outside",
+                        "tickson":"boundaries",
+                        "tickcolor":self.BLACK,
+                        "tickwidth":self.LINE_WIDTH,
+                        "mirror": True,
+                        "linecolor":self.BLACK,
+                        "linewidth":self.LINE_WIDTH,
+                        "zeroline":True,
+                        "zerolinecolor":self.GREY,
+                        "zerolinewidth":self.LINE_WIDTH,
                     }
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
