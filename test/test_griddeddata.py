@@ -1,6 +1,5 @@
 # pylint:disable=C0114
 
-from pathlib import Path
 from dimes import GridAxis, GridPointData, RegularGridData
 
 
