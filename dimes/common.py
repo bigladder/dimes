@@ -144,6 +144,7 @@ class DimensionalPlot:
         self.WHITE = "white"
         self.BLACK = "black"
         self.GREY = "rgba(128,128,128,0.3)"
+        self.RANGE_BUFFER = 0.1
 
 
     def add_display_data(
@@ -164,6 +165,17 @@ class DimensionalPlot:
         if self.subplots[subplot_index] is None:
             self.subplots[subplot_index] = DimensionalSubplot()
         self.subplots[subplot_index].add_display_data(display_data, axis_name)  # type: ignore[union-attr]
+    
+    def append_y_values_range(self, y_values):
+        self.y_range["min"].append(min(y_values))
+        self.y_range["max"].append(max(y_values))
+    
+    def get_axis_range(self, values):
+        min_value = min(values["min"])
+        max_value = max(values["max"])
+        range_values = max_value - min_value
+        return [min_value - range_values*self.RANGE_BUFFER, max_value + range_values*self.RANGE_BUFFER]
+
 
     def finalize_plot(self):
         """Once all TimeSeriesData objects have been added, generate plot and subplots."""
@@ -182,16 +194,19 @@ class DimensionalPlot:
                     y_axis_side = "left"
                     for axis_number, axis in enumerate(subplot.axes):
                         y_axis_id = absolute_axis_index + 1
+                        self.y_range: dict = {"min":[],"max":[]}
                         for display_data in axis.display_data_set:
                             at_least_one_subplot = True
-                            self.figure.add_trace(
-                                Scatter(
-                                    x=self.x_axis_values,
-                                    y=koozie.convert(
+                            y_values = koozie.convert(
                                         display_data.data_values,
                                         display_data.native_units,
                                         axis.units,
-                                    ),
+                                    )
+                            self.append_y_values_range(y_values)
+                            self.figure.add_trace(
+                                Scatter(
+                                    x=self.x_axis_values,
+                                    y=y_values,
                                     name=display_data.name,
                                     yaxis=f"y{y_axis_id}",
                                     xaxis=f"x{x_axis_id}",
@@ -240,6 +255,7 @@ class DimensionalPlot:
                             "zeroline":True,
                             "zerolinecolor":self.GREY,
                             "zerolinewidth":self.LINE_WIDTH,
+                            "range":self.get_axis_range(self.y_range)
 
                         }
                         absolute_axis_index += 1
