@@ -1,8 +1,8 @@
 """For making plots of multi-dimensional gridded data."""
 
-from typing import List
+from typing import List, Union
 
-from .common import DimensionalData
+from .common import DimensionalData, LineProperties
 
 
 class GridAxis(DimensionalData):
