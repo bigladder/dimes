@@ -186,6 +186,7 @@ class DimensionalPlot:
             absolute_axis_index = 0  # Used to track axes data in the plot
             self.figure.layout["plot_bgcolor"] = self.WHITE
             self.figure.layout["font_color"] = self.BLACK
+            self.figure.layout["title_x"] = 0.5
             for subplot_index, subplot in enumerate(self.subplots):
                 subplot_number = subplot_index + 1
                 x_axis_id = subplot_number
