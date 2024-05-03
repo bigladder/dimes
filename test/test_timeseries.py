@@ -10,7 +10,7 @@ TESTING_DIRECTORY.mkdir(exist_ok=True)
 
 def test_basic_plot():
     """Test basic plot"""
-    plot = TimeSeriesPlot([1, 2, 3, 4, 5])
+    plot = TimeSeriesPlot([1, 2, 3, 4, 5], "Title Basic Plot")
     plot.add_time_series(TimeSeriesData([x**2 for x in plot.time_values]))
     plot.add_time_series(TimeSeriesData([x**3 for x in plot.time_values]))
 
