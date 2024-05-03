@@ -135,3 +135,19 @@ def test_missing_marker_symbol():
         )
     )
     plot.write_html_plot(Path(TESTING_DIRECTORY, "missing_marker_symbol.html"))
+
+def test_legend_group():
+    """Test legend group and legend group title"""
+    plot = TimeSeriesPlot([1, 2, 3, 4, 5])
+    city_data = {"City_A":{2000:[x**2 for x in plot.time_values],2010:[x**3 for x in plot.time_values]},
+            "City_B":{2000:[x**2.5 for x in plot.time_values],2010:[x**3.5 for x in plot.time_values]}}
+    for city, year_data in city_data.items():
+        for year, data in year_data.items():
+            plot.add_time_series(
+                TimeSeriesData(
+                    data,
+                    name = city,
+                    legend_group = year
+                )
+            )
+    plot.write_html_plot(Path(TESTING_DIRECTORY, "legend_group.html"))
