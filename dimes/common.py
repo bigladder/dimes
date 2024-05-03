@@ -76,10 +76,12 @@ class DisplayData(DimensionalData):
         display_units: Union[str, None] = None,
         line_properties: LineProperties = LineProperties(),
         is_visible: bool = True,
+        legend_group: Union[str, int, None] = None,
     ):
         super().__init__(data_values, name, native_units, display_units)
         self.line_properties = line_properties
         self.is_visible = is_visible
+        self.legend_group = legend_group
 
 
 class DimensionalAxis:
@@ -214,7 +216,7 @@ class DimensionalPlot:
                                     mode=display_data.line_properties.get_line_mode(),
                                     visible=(
                                         "legendonly"
-                                        if not display_data.line_properties.is_visible
+                                        if not display_data.is_visible
                                         else True
                                     ),
                                     line={
@@ -230,6 +232,8 @@ class DimensionalPlot:
                                             "width": 2,
                                         },
                                     },
+                                    legendgroup=display_data.legend_group,
+                                    legendgrouptitle={"text":display_data.legend_group},
                                 ),
                             )
                         is_base_y_axis = subplot_base_y_axis_id == y_axis_id
