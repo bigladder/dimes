@@ -1,6 +1,10 @@
 # pylint:disable=C0114
 
+from pathlib import Path
 from dimes import GridAxis, GridPointData, RegularGridData
+
+TESTING_DIRECTORY = Path("test_outputs")
+TESTING_DIRECTORY.mkdir(exist_ok=True)
 
 
 def test_2d_data():
@@ -14,8 +18,13 @@ def test_2d_data():
             capacity_data.append(t_value + h_value)
             power_data.append((t_value + h_value) * 3.5)
 
-    capacity = GridPointData(capacity_data, name="Capacity")
-    power = GridPointData(power_data, name="Power")
+    capacity = GridPointData(capacity_data, name="Capacity", native_units="Btu/h")
+    power = GridPointData(power_data, name="Power", native_units="kW")
 
     gridded_data = RegularGridData([temperature, humidity], [capacity, power])
-    gridded_data.plot(capacity.name, temperature.name, {humidity.name: 33}, "capacity.html")
+    gridded_data.initialize_plot(
+        capacity.name,
+        temperature.name,
+        {humidity.name: (33, "%")},
+        Path(TESTING_DIRECTORY, "capacity.html"),
+    )

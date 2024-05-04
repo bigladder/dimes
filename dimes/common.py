@@ -1,8 +1,9 @@
 from pathlib import Path
-from typing import Union, List, Tuple
+from typing import Union, Tuple, List, SupportsFloat
+from collections.abc import Iterable
 from dataclasses import dataclass
 import warnings
-
+from datetime import datetime
 
 from plotly.graph_objects import Figure, Scatter  # type: ignore
 
@@ -13,31 +14,53 @@ import koozie
 class LineProperties:
     color: Union[str, None] = None
     line_type: Union[str, None] = None
+    line_width: Union[int, None] = None
     marker_symbol: Union[str, None] = None
     marker_size: Union[int, None] = None
     marker_line_color: Union[str, None] = None
+    marker_line_width: Union[int, None] = None
     marker_fill_color: Union[str, None] = None
     is_visible: bool = True
 
     def get_line_mode(self):
-        if all(
-            variables is None
-            for variables in (
-                self.marker_size,
-                self.marker_symbol,
-                self.marker_line_color,
-                self.marker_fill_color,
-            )
-        ):
-            return "lines"
+
+        if self.line_width is None:
+            has_lines = True
+        elif self.line_width == 0:
+            has_lines = False
         else:
+            has_lines = True
+
+        if self.marker_size is None:
+            has_markers = True
+        elif self.marker_size == 0:
+            has_markers = False
+        else:
+            has_markers = True
+
+        if has_lines and has_markers:
             return "lines+markers"
+        if has_markers:
+            return "markers"
+        if has_lines:
+            return "lines"
+        return "lines+markers"
+
+
+@dataclass
+class MarkersOnly(LineProperties):
+    line_width: Union[int, None] = 0
+
+
+@dataclass
+class LinesOnly(LineProperties):
+    marker_size: Union[int, None] = 0
 
 
 class DimensionalData:
     def __init__(
         self,
-        data_values: list,
+        data_values: Iterable[SupportsFloat],
         name: Union[str, None] = None,
         native_units: str = "",
         display_units: Union[str, None] = None,
@@ -60,9 +83,19 @@ class DimensionalData:
             self.display_units = units
             display_units_dimensionality = koozie.get_dimensionality(self.display_units)
             if self.dimensionality != display_units_dimensionality:
-                raise Exception(
+                raise RuntimeError(
                     f"display_units, {self.display_units}, dimensionality ({display_units_dimensionality}) does not match native_units, {self.native_units}, dimensionality ({self.dimensionality})"
                 )
+
+
+class TimeSeriesAxis:
+    def __init__(
+        self,
+        data_values: Iterable[datetime],
+        name: str = "Time",
+    ):
+        self.data_values = data_values
+        self.name = name
 
 
 class DisplayData(DimensionalData):
@@ -70,7 +103,7 @@ class DisplayData(DimensionalData):
 
     def __init__(
         self,
-        data_values: list,
+        data_values: Iterable[SupportsFloat],
         name: Union[str, None] = None,
         native_units: str = "",
         display_units: Union[str, None] = None,
@@ -105,15 +138,15 @@ class DimensionalSubplot:
     def add_display_data(
         self, display_data: DisplayData, axis_name: Union[str, None] = None
     ) -> None:
-        """Add `TimeSeriesData` to an axis"""
+        """Add `DisplayData` to an axis"""
         if axis_name is not None:
-            # Add time series to existing axis of the same name if it exists
+            # Add display data to existing axis of the same name if it exists
             for axis in self.axes:
                 if axis.name == axis_name:
                     self.add_display_data_to_existing_axis(display_data, axis)
                     return
         else:
-            # Add time series to existing axis of the dimensionality if it exists
+            # Add display data to existing axis of the dimensionality if it exists
             for axis in self.axes:
                 if axis.dimensionality == display_data.dimensionality:
                     self.add_display_data_to_existing_axis(display_data, axis)
@@ -135,9 +168,18 @@ class DimensionalSubplot:
 class DimensionalPlot:
     """Plot of dimensional data."""
 
-    def __init__(self, x_axis_values: list):
+    def __init__(
+        self, x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime]]
+    ):
         self.figure = Figure()
-        self.x_axis_values = x_axis_values
+        self.x_axis: Union[DimensionalData, TimeSeriesAxis]
+        if isinstance(x_axis, list):
+            if isinstance(x_axis[0], datetime):
+                self.x_axis = TimeSeriesAxis(x_axis)  # type: ignore[arg-type]
+            else:
+                self.x_axis = DimensionalData(x_axis)  # type: ignore[arg-type]
+        else:
+            self.x_axis = x_axis
         self.subplots: List[Union[DimensionalSubplot, None]] = [None]
         self.is_finalized = False
 
@@ -147,7 +189,7 @@ class DimensionalPlot:
         subplot_number: Union[int, None] = None,
         axis_name: Union[str, None] = None,
     ) -> None:
-        """Add a TimeSeriesData object to the plot."""
+        """Add a DisplayData object to the plot."""
         if subplot_number is None:
             # Default case
             subplot_number = len(self.subplots)
@@ -161,12 +203,15 @@ class DimensionalPlot:
         self.subplots[subplot_index].add_display_data(display_data, axis_name)  # type: ignore[union-attr]
 
     def finalize_plot(self):
-        """Once all TimeSeriesData objects have been added, generate plot and subplots."""
+        """Once all DisplayData objects have been added, generate plot and subplots."""
         if not self.is_finalized:
             at_least_one_subplot = False
             number_of_subplots = len(self.subplots)
             subplot_domains = get_subplot_domains(number_of_subplots)
             absolute_axis_index = 0  # Used to track axes data in the plot
+            x_axis_label = f"{self.x_axis.name}"
+            if isinstance(self.x_axis, DimensionalData):
+                x_axis_label += f" [{self.x_axis.display_units}]"
             for subplot_index, subplot in enumerate(self.subplots):
                 subplot_number = subplot_index + 1
                 x_axis_id = subplot_number
@@ -179,7 +224,7 @@ class DimensionalPlot:
                             at_least_one_subplot = True
                             self.figure.add_trace(
                                 Scatter(
-                                    x=self.x_axis_values,
+                                    x=self.x_axis.data_values,
                                     y=koozie.convert(
                                         display_data.data_values,
                                         display_data.native_units,
@@ -197,6 +242,7 @@ class DimensionalPlot:
                                     line={
                                         "color": display_data.line_properties.color,
                                         "dash": display_data.line_properties.line_type,
+                                        "width": display_data.line_properties.line_width,
                                     },
                                     marker={
                                         "size": display_data.line_properties.marker_size,
@@ -204,7 +250,7 @@ class DimensionalPlot:
                                         "symbol": display_data.line_properties.marker_symbol,
                                         "line": {
                                             "color": display_data.line_properties.marker_line_color,
-                                            "width": 2,
+                                            "width": display_data.line_properties.marker_line_width,
                                         },
                                     },
                                 ),
@@ -229,6 +275,7 @@ class DimensionalPlot:
                         y_axis_side = "right" if y_axis_side == "left" else "left"
                     is_last_subplot = subplot_number == number_of_subplots
                     self.figure.layout[f"xaxis{x_axis_id}"] = {
+                        "title": x_axis_label if is_last_subplot else None,
                         "anchor": f"y{subplot_base_y_axis_id}",
                         "domain": [0.0, 1.0],
                         "matches": (
@@ -241,7 +288,7 @@ class DimensionalPlot:
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
             if not at_least_one_subplot:
-                raise Exception("No time series data provided.")
+                raise RuntimeError("No display data provided.")
 
             self.is_finalized = True
 

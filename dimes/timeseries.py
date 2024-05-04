@@ -15,4 +15,4 @@ class TimeSeriesPlot(DimensionalPlot):
     def __init__(self, time_values: list):
         super().__init__(time_values)
         self.add_time_series = self.add_display_data
-        self.time_values = self.x_axis_values
+        self.time_values = self.x_axis.data_values
