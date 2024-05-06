@@ -17,7 +17,6 @@ class LineProperties:
     marker_size: Union[int, None] = None
     marker_line_color: Union[str, None] = None
     marker_fill_color: Union[str, None] = None
-    is_visible: bool = True
 
     def get_line_mode(self):
         if all(
