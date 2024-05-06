@@ -121,7 +121,7 @@ def test_basic_marker():
 
 
 def test_missing_marker_symbol():
-    """Test missing marker symbol, default symbol should be 'circle'"""
+    """Test missing marker symbol, default symbol should be 'circle'."""
     plot = TimeSeriesPlot([1, 2, 3, 4, 5])
     plot.add_time_series(
         TimeSeriesData(
@@ -138,7 +138,7 @@ def test_missing_marker_symbol():
 
 
 def test_legend_group():
-    """Test legend group and legend group title"""
+    """Test legend group and legend group title."""
     plot = TimeSeriesPlot([1, 2, 3, 4, 5])
     city_data = {"City_A":{2000:[x**2 for x in plot.time_values],2010:[x**3 for x in plot.time_values]},
             "City_B":{2000:[x**2.5 for x in plot.time_values],2010:[x**3.5 for x in plot.time_values]}}
