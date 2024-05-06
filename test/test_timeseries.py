@@ -2,7 +2,7 @@
 
 from pathlib import Path
 import pytest
-from dimes import TimeSeriesPlot, TimeSeriesData, LineProperties
+from dimes import TimeSeriesPlot, TimeSeriesData, LineProperties, LegendProperties
 
 TESTING_DIRECTORY = Path("test_outputs")
 TESTING_DIRECTORY.mkdir(exist_ok=True)
@@ -76,7 +76,9 @@ def test_multi_plot():
             [x * 10 for x in plot.time_values],
             name="Capacity",
             native_units="kBtu/h",
-            is_visible=False,
+            legend_properties=LegendProperties(
+                is_visible=False
+            )
         )
     )
     # Time series and axis will get name from dimensionality, subplot default to 1, new axis for new dimension on existing subplot
@@ -148,7 +150,9 @@ def test_legend_group():
                 TimeSeriesData(
                     data,
                     name = city,
-                    legend_group = year
+                    legend_properties=LegendProperties(
+                        legend_group = year
+                    ),
                 )
             )
     plot.write_html_plot(Path(TESTING_DIRECTORY, "legend_group.html"))
@@ -166,7 +170,9 @@ def test_is_visible():
                 marker_line_color="black",
                 marker_fill_color="white",
             ),
-            is_visible=True,
+            legend_properties=LegendProperties(
+                is_visible=True,
+            ),
             name = "Visible"
         )
     )
@@ -179,7 +185,9 @@ def test_is_visible():
                 marker_line_color="black",
                 marker_fill_color="white",
             ),
-            is_visible=False,
+            legend_properties=LegendProperties(
+                is_visible=False,
+            ),
             name = "Legend Only"
         )
     )
