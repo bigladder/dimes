@@ -136,6 +136,7 @@ def test_missing_marker_symbol():
     )
     plot.write_html_plot(Path(TESTING_DIRECTORY, "missing_marker_symbol.html"))
 
+
 def test_legend_group():
     """Test legend group and legend group title"""
     plot = TimeSeriesPlot([1, 2, 3, 4, 5])
