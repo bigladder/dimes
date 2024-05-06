@@ -152,3 +152,35 @@ def test_legend_group():
                 )
             )
     plot.write_html_plot(Path(TESTING_DIRECTORY, "legend_group.html"))
+
+
+def test_is_visible():
+    """Test visibility of lines in plot and legend."""
+    plot = TimeSeriesPlot([1, 2, 3, 4, 5])
+    plot.add_time_series(
+        TimeSeriesData(
+            [x**2 for x in plot.time_values],
+            line_properties=LineProperties(
+                color="blue",
+                marker_size=5,
+                marker_line_color="black",
+                marker_fill_color="white",
+            ),
+            is_visible=True,
+            name = "Visible"
+        )
+    )
+    plot.add_time_series(
+        TimeSeriesData(
+            [x**3 for x in plot.time_values],
+            line_properties=LineProperties(
+                color="green",
+                marker_size=5,
+                marker_line_color="black",
+                marker_fill_color="white",
+            ),
+            is_visible=False,
+            name = "Legend Only"
+        )
+    )
+    plot.write_html_plot(Path(TESTING_DIRECTORY, "is_visible.html"))
