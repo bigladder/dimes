@@ -266,7 +266,6 @@ class DimensionalPlot:
                             "gridcolor":self.GREY,
                             "gridwidth":self.GRID_LINE_WIDTH,
                             "range":self.get_axis_range(self.y_range)
-
                         }
                         self.figure.layout[f"yaxis{y_axis_id}"].update(xy_common_axis_format)
                         absolute_axis_index += 1
