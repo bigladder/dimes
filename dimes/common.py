@@ -145,7 +145,7 @@ class DimensionalPlot:
         self.x_axis_values = x_axis_values
         self.subplots: List[Union[DimensionalSubplot, None]] = [None]
         self.is_finalized = False
-        self.LINE_WIDTH = 1.5
+        self.GRID_LINE_WIDTH = 1.5
         self.WHITE = "white"
         self.BLACK = "black"
         self.GREY = "rgba(128,128,128,0.3)"
@@ -259,10 +259,7 @@ class DimensionalPlot:
                             "linewidth":self.LINE_WIDTH,
                             "showgrid":True,
                             "gridcolor":self.GREY,
-                            "gridwidth":self.LINE_WIDTH,
-                            "zeroline":True,
-                            "zerolinecolor":self.GREY,
-                            "zerolinewidth":self.LINE_WIDTH,
+                            "gridwidth":self.GRID_LINE_WIDTH,
                             "range":self.get_axis_range(self.y_range)
 
                         }
@@ -281,14 +278,7 @@ class DimensionalPlot:
                         "ticks":"outside",
                         "tickson":"boundaries",
                         "tickcolor":self.BLACK,
-                        "tickwidth":self.LINE_WIDTH,
-                        "mirror": True,
-                        "linecolor":self.BLACK,
-                        "linewidth":self.LINE_WIDTH,
-                        "zeroline":True,
-                        "zerolinecolor":self.GREY,
-                        "zerolinewidth":self.LINE_WIDTH,
-                    }
+                        "tickwidth":self.GRID_LINE_WIDTH,
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
             if not at_least_one_subplot:
