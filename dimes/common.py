@@ -192,6 +192,14 @@ class DimensionalPlot:
             self.figure.layout["plot_bgcolor"] = self.WHITE
             self.figure.layout["font_color"] = self.BLACK
             self.figure.layout["title_x"] = 0.5
+            xy_common_axis_format = {
+                "mirror": True,
+                "linecolor":self.BLACK,
+                "linewidth":self.GRID_LINE_WIDTH,
+                "zeroline":True,
+                "zerolinecolor":self.GREY,
+                "zerolinewidth":self.GRID_LINE_WIDTH,
+            }
             for subplot_index, subplot in enumerate(self.subplots):
                 subplot_number = subplot_index + 1
                 x_axis_id = subplot_number
@@ -254,15 +262,13 @@ class DimensionalPlot:
                             ),
                             "tickmode": "sync" if not is_base_y_axis else None,
                             "autoshift": True if axis_number > 1 else None,
-                            "mirror": True,
-                            "linecolor":self.BLACK,
-                            "linewidth":self.LINE_WIDTH,
                             "showgrid":True,
                             "gridcolor":self.GREY,
                             "gridwidth":self.GRID_LINE_WIDTH,
                             "range":self.get_axis_range(self.y_range)
 
                         }
+                        self.figure.layout[f"yaxis{y_axis_id}"].update(xy_common_axis_format)
                         absolute_axis_index += 1
                         y_axis_side = "right" if y_axis_side == "left" else "left"
                     is_last_subplot = subplot_number == number_of_subplots
@@ -279,6 +285,8 @@ class DimensionalPlot:
                         "tickson":"boundaries",
                         "tickcolor":self.BLACK,
                         "tickwidth":self.GRID_LINE_WIDTH,
+                    }
+                    self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
             if not at_least_one_subplot:
