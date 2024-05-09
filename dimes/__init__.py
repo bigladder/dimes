@@ -1,7 +1,6 @@
 """dimes public interface"""
 
 from .common import (
-    LegendProperties,
     LineProperties,
     MarkersOnly,
     LinesOnly,

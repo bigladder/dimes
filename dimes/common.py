@@ -56,11 +56,6 @@ class LinesOnly(LineProperties):
     marker_size: Union[int, None] = 0
 
 
-@dataclass
-class LegendProperties:
-    is_visible: bool = True
-    legend_group: Union[str, int, None] = None
-
 
 class DimensionalData:
     def __init__(
@@ -113,11 +108,13 @@ class DisplayData(DimensionalData):
         native_units: str = "",
         display_units: Union[str, None] = None,
         line_properties: LineProperties = LineProperties(),
-        legend_properties: LegendProperties = LegendProperties(),
+        is_visible: bool = True,
+        legend_group: Union[str, None] = None
     ):
         super().__init__(data_values, name, native_units, display_units)
         self.line_properties = line_properties
-        self.legend_properties = legend_properties
+        self.is_visible = is_visible
+        self.legend_group = legend_group
 
 
 class DimensionalAxis:
@@ -289,8 +286,8 @@ class DimensionalPlot:
                                             "width": display_data.line_properties.marker_line_width,
                                         },
                                     },
-                                    legendgroup=display_data.legend_properties.legend_group,
-                                    legendgrouptitle={"text":display_data.legend_properties.legend_group},
+                                    legendgroup=display_data.legend_group,
+                                    legendgrouptitle={"text":display_data.legend_group},
                                 ),
                             )
                         is_base_y_axis = subplot_base_y_axis_id == y_axis_id
