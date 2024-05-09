@@ -125,10 +125,18 @@ class DimensionalAxis:
         self.units = display_data.display_units
         self.dimensionality = display_data.dimensionality
         self.display_data_set: List[DisplayData] = [display_data]
+        self.range_min: SupportsFloat = float("inf")
+        self.range_max: SupportsFloat = -float("inf")
 
     def get_axis_label(self) -> str:
         """Make the string that appears as the axis label"""
         return f"{self.name} [{self.units}]"
+
+    @staticmethod
+    def get_axis_range(value_min, value_max):
+        range_buffer = 0.1
+        range_values = value_max - value_min
+        return [value_min - range_values*range_buffer, value_max + range_values*range_buffer]
 
 
 class DimensionalSubplot:
@@ -209,16 +217,6 @@ class DimensionalPlot:
         if self.subplots[subplot_index] is None:
             self.subplots[subplot_index] = DimensionalSubplot()
         self.subplots[subplot_index].add_display_data(display_data, axis_name)  # type: ignore[union-attr]
-    
-    def append_y_values_range(self, y_values):
-        self.y_range["min"].append(min(y_values))
-        self.y_range["max"].append(max(y_values))
-    
-    def get_axis_range(self, values):
-        min_value = min(values["min"])
-        max_value = max(values["max"])
-        range_values = max_value - min_value
-        return [min_value - range_values*self.RANGE_BUFFER, max_value + range_values*self.RANGE_BUFFER]
 
 
     def finalize_plot(self):
@@ -250,7 +248,6 @@ class DimensionalPlot:
                     y_axis_side = "left"
                     for axis_number, axis in enumerate(subplot.axes):
                         y_axis_id = absolute_axis_index + 1
-                        self.y_range: dict = {"min":[],"max":[]}
                         for display_data in axis.display_data_set:
                             at_least_one_subplot = True
                             y_values = koozie.convert(
@@ -258,7 +255,8 @@ class DimensionalPlot:
                                         display_data.native_units,
                                         axis.units,
                                     )
-                            self.append_y_values_range(y_values)
+                            axis.range_min = min(min(y_values), axis.range_min)
+                            axis.range_max = max(max(y_values), axis.range_max)
                             self.figure.add_trace(
                                 Scatter(
                                     x=self.x_axis.data_values,
@@ -308,7 +306,7 @@ class DimensionalPlot:
                             "showgrid":True,
                             "gridcolor":self.GREY,
                             "gridwidth":self.GRID_LINE_WIDTH,
-                            "range":self.get_axis_range(self.y_range)
+                            "range":axis.get_axis_range(axis.range_min, axis.range_max)
                         }
                         self.figure.layout[f"yaxis{y_axis_id}"].update(xy_common_axis_format)
                         absolute_axis_index += 1
