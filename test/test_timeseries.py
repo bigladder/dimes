@@ -2,7 +2,7 @@
 
 from pathlib import Path
 import pytest
-from dimes import TimeSeriesPlot, TimeSeriesData, LineProperties, LegendProperties
+from dimes import TimeSeriesPlot, TimeSeriesData, LineProperties, LinesOnly
 
 TESTING_DIRECTORY = Path("test_outputs")
 TESTING_DIRECTORY.mkdir(exist_ok=True)
@@ -174,7 +174,7 @@ def test_is_visible():
     plot.add_time_series(
         TimeSeriesData(
             [x**3 for x in plot.time_values],
-            line_properties=LineProperties(
+            line_properties=LinesOnly(
                 color="green",
                 marker_size=5,
                 marker_line_color="black",
