@@ -9,6 +9,9 @@ from plotly.graph_objects import Figure, Scatter  # type: ignore
 
 import koozie
 
+WHITE = "white"
+BLACK = "black"
+GREY = "rgba(128,128,128,0.3)"
 
 @dataclass
 class LineProperties:
@@ -222,20 +225,21 @@ class DimensionalPlot:
     def finalize_plot(self):
         """Once all DisplayData objects have been added, generate plot and subplots."""
         if not self.is_finalized:
+            grid_line_width = 1.5
             at_least_one_subplot = False
             number_of_subplots = len(self.subplots)
             subplot_domains = get_subplot_domains(number_of_subplots)
             absolute_axis_index = 0  # Used to track axes data in the plot
-            self.figure.layout["plot_bgcolor"] = self.WHITE
-            self.figure.layout["font_color"] = self.BLACK
+            self.figure.layout["plot_bgcolor"] = WHITE
+            self.figure.layout["font_color"] = BLACK
             self.figure.layout["title_x"] = 0.5
             xy_common_axis_format = {
                 "mirror": True,
-                "linecolor":self.BLACK,
-                "linewidth":self.GRID_LINE_WIDTH,
+                "linecolor":BLACK,
+                "linewidth":grid_line_width,
                 "zeroline":True,
-                "zerolinecolor":self.GREY,
-                "zerolinewidth":self.GRID_LINE_WIDTH,
+                "zerolinecolor":GREY,
+                "zerolinewidth":grid_line_width,
             }
             x_axis_label = f"{self.x_axis.name}"
             if isinstance(self.x_axis, DimensionalData):
@@ -304,8 +308,8 @@ class DimensionalPlot:
                             "tickmode": "sync" if not is_base_y_axis else None,
                             "autoshift": True if axis_number > 1 else None,
                             "showgrid":True,
-                            "gridcolor":self.GREY,
-                            "gridwidth":self.GRID_LINE_WIDTH,
+                            "gridcolor":GREY,
+                            "gridwidth":grid_line_width,
                             "range":axis.get_axis_range(axis.range_min, axis.range_max)
                         }
                         self.figure.layout[f"yaxis{y_axis_id}"].update(xy_common_axis_format)
@@ -324,8 +328,8 @@ class DimensionalPlot:
                         "showticklabels": None if is_last_subplot else False,
                         "ticks":"outside",
                         "tickson":"boundaries",
-                        "tickcolor":self.BLACK,
-                        "tickwidth":self.GRID_LINE_WIDTH,
+                        "tickcolor":BLACK,
+                        "tickwidth":grid_line_width,
                     }
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
                 else:
