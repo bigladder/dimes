@@ -13,6 +13,7 @@ WHITE = "white"
 BLACK = "black"
 GREY = "rgba(128,128,128,0.3)"
 
+
 @dataclass
 class LineProperties:
     color: Union[str, None] = None
@@ -57,7 +58,6 @@ class MarkersOnly(LineProperties):
 @dataclass
 class LinesOnly(LineProperties):
     marker_size: Union[SupportsFloat, None] = 0
-
 
 
 class DimensionalData:
@@ -144,7 +144,7 @@ class DimensionalAxis:
     def get_axis_range(value_min, value_max):
         range_buffer = 0.1
         range_values = value_max - value_min
-        return [value_min - range_values*range_buffer, value_max + range_values*range_buffer]
+        return [value_min - range_values * range_buffer, value_max + range_values * range_buffer]
 
 
 class DimensionalSubplot:
@@ -183,7 +183,9 @@ class DimensionalPlot:
     """Plot of dimensional data."""
 
     def __init__(
-        self, x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime]], plot_title: Union[str, None] = None
+        self,
+        x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime]],
+        plot_title: Union[str, None] = None,
     ):
         self.figure = Figure()
         self.x_axis: Union[DimensionalData, TimeSeriesAxis]
@@ -197,7 +199,6 @@ class DimensionalPlot:
         self.subplots: List[Union[DimensionalSubplot, None]] = [None]
         self.is_finalized = False
         self.figure.layout["title"] = plot_title
-
 
     def add_display_data(
         self,
@@ -218,7 +219,6 @@ class DimensionalPlot:
             self.subplots[subplot_index] = DimensionalSubplot()
         self.subplots[subplot_index].add_display_data(display_data, axis_name)  # type: ignore[union-attr]
 
-
     def finalize_plot(self):
         """Once all DisplayData objects have been added, generate plot and subplots."""
         if not self.is_finalized:
@@ -232,11 +232,11 @@ class DimensionalPlot:
             self.figure.layout["title_x"] = 0.5
             xy_common_axis_format = {
                 "mirror": True,
-                "linecolor":BLACK,
-                "linewidth":grid_line_width,
-                "zeroline":True,
-                "zerolinecolor":GREY,
-                "zerolinewidth":grid_line_width,
+                "linecolor": BLACK,
+                "linewidth": grid_line_width,
+                "zeroline": True,
+                "zerolinecolor": GREY,
+                "zerolinewidth": grid_line_width,
             }
             x_axis_label = f"{self.x_axis.name}"
             if isinstance(self.x_axis, DimensionalData):
@@ -252,10 +252,10 @@ class DimensionalPlot:
                         for display_data in axis.display_data_set:
                             at_least_one_subplot = True
                             y_values = koozie.convert(
-                                        display_data.data_values,
-                                        display_data.native_units,
-                                        axis.units,
-                                    )
+                                display_data.data_values,
+                                display_data.native_units,
+                                axis.units,
+                            )
                             axis.range_min = min(min(y_values), axis.range_min)
                             axis.range_max = max(max(y_values), axis.range_max)
                             if display_data.x_axis is None:
@@ -290,11 +290,7 @@ class DimensionalPlot:
                                     yaxis=f"y{y_axis_id}",
                                     xaxis=f"x{x_axis_id}",
                                     mode=display_data.line_properties.get_line_mode(),
-                                    visible=(
-                                        "legendonly"
-                                        if not display_data.is_visible
-                                        else True
-                                    ),
+                                    visible=("legendonly" if not display_data.is_visible else True),
                                     line={
                                         "color": display_data.line_properties.color,
                                         "dash": display_data.line_properties.line_type,
@@ -310,7 +306,7 @@ class DimensionalPlot:
                                         },
                                     },
                                     legendgroup=display_data.legend_group,
-                                    legendgrouptitle={"text":display_data.legend_group},
+                                    legendgrouptitle={"text": display_data.legend_group},
                                 ),
                             )
                         is_base_y_axis = subplot_base_y_axis_id == y_axis_id
@@ -322,10 +318,10 @@ class DimensionalPlot:
                             "overlaying": (f"y{subplot_base_y_axis_id}" if not is_base_y_axis else None),
                             "tickmode": "sync" if not is_base_y_axis else None,
                             "autoshift": True if axis_number > 1 else None,
-                            "showgrid":True,
-                            "gridcolor":GREY,
-                            "gridwidth":grid_line_width,
-                            "range":axis.get_axis_range(axis.range_min, axis.range_max)
+                            "showgrid": True,
+                            "gridcolor": GREY,
+                            "gridwidth": grid_line_width,
+                            "range": axis.get_axis_range(axis.range_min, axis.range_max),
                         }
                         self.figure.layout[f"yaxis{y_axis_id}"].update(xy_common_axis_format)
                         absolute_axis_index += 1
@@ -337,10 +333,10 @@ class DimensionalPlot:
                         "domain": [0.0, 1.0],
                         "matches": (f"x{number_of_subplots}" if subplot_number < number_of_subplots else None),
                         "showticklabels": None if is_last_subplot else False,
-                        "ticks":"outside",
-                        "tickson":"boundaries",
-                        "tickcolor":BLACK,
-                        "tickwidth":grid_line_width,
+                        "ticks": "outside",
+                        "tickson": "boundaries",
+                        "tickcolor": BLACK,
+                        "tickwidth": grid_line_width,
                     }
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
                 else:
