@@ -269,7 +269,7 @@ class DimensionalPlot:
                                     mode=display_data.line_properties.get_line_mode(),
                                     visible=(
                                         "legendonly"
-                                        if not display_data.legend_properties.is_visible
+                                        if not display_data.is_visible
                                         else True
                                     ),
                                     line={
