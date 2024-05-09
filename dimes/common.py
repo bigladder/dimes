@@ -7,8 +7,6 @@ from datetime import datetime
 
 from plotly.graph_objects import Figure, Scatter  # type: ignore
 
-from plotly.express.colors import sample_colorscale
-
 import koozie
 
 
