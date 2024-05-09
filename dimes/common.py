@@ -284,7 +284,7 @@ class DimensionalPlot:
                                     )
                             self.figure.add_trace(
                                 Scatter(
-                                    x=self.x_axis.data_values,
+                                    x=x_axis_values,
                                     y=y_values,
                                     name=display_data.name,
                                     yaxis=f"y{y_axis_id}",
