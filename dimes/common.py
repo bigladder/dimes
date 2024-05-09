@@ -182,7 +182,7 @@ class DimensionalPlot:
     """Plot of dimensional data."""
 
     def __init__(
-        self, x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime]]
+        self, x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime]], plot_title: Union[str, None] = None
     ):
         self.figure = Figure()
         self.x_axis: Union[DimensionalData, TimeSeriesAxis]
@@ -195,11 +195,7 @@ class DimensionalPlot:
             self.x_axis = x_axis
         self.subplots: List[Union[DimensionalSubplot, None]] = [None]
         self.is_finalized = False
-        self.GRID_LINE_WIDTH = 1.5
-        self.WHITE = "white"
-        self.BLACK = "black"
-        self.GREY = "rgba(128,128,128,0.3)"
-        self.RANGE_BUFFER = 0.1
+        self.figure.layout["title"] = plot_title
 
 
     def add_display_data(
