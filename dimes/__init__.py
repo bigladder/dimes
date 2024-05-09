@@ -10,3 +10,4 @@ from .common import (
 )
 from .timeseries import TimeSeriesPlot, TimeSeriesData
 from .griddeddata import GridAxis, GridPointData, RegularGridData
+from plotly.colors import sample_colorscale

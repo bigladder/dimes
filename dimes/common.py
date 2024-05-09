@@ -71,11 +71,7 @@ class DimensionalData:
         self.data_values = data_values
         self.native_units = native_units
         self.dimensionality = koozie.get_dimensionality(self.native_units)
-        self.name = (
-            name
-            if name is not None
-            else str(self.dimensionality).title().replace("[", "").replace("]", "")
-        )
+        self.name = name if name is not None else str(self.dimensionality).title().replace("[", "").replace("]", "")
         self.set_display_units(display_units)
 
     def set_display_units(self, units: Union[str, None] = None) -> None:
@@ -112,9 +108,18 @@ class DisplayData(DimensionalData):
         display_units: Union[str, None] = None,
         line_properties: LineProperties = LineProperties(),
         is_visible: bool = True,
-        legend_group: Union[str, None] = None
+        legend_group: Union[str, None] = None,
+        x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime], None] = None,
     ):
         super().__init__(data_values, name, native_units, display_units)
+        self.x_axis: Union[DimensionalData, TimeSeriesAxis, None]
+        if isinstance(x_axis, list):
+            if isinstance(x_axis[0], datetime):
+                self.x_axis = TimeSeriesAxis(x_axis)  # type: ignore[arg-type]
+            else:
+                self.x_axis = DimensionalData(x_axis)  # type: ignore[arg-type]
+        else:
+            self.x_axis = x_axis
         self.line_properties = line_properties
         self.is_visible = is_visible
         self.legend_group = legend_group
@@ -148,9 +153,7 @@ class DimensionalSubplot:
     def __init__(self) -> None:
         self.axes: List[DimensionalAxis] = []
 
-    def add_display_data(
-        self, display_data: DisplayData, axis_name: Union[str, None] = None
-    ) -> None:
+    def add_display_data(self, display_data: DisplayData, axis_name: Union[str, None] = None) -> None:
         """Add `DisplayData` to an axis"""
         if axis_name is not None:
             # Add display data to existing axis of the same name if it exists
@@ -169,9 +172,7 @@ class DimensionalSubplot:
         # Otherwise, make a new axis
         self.axes.append(DimensionalAxis(display_data, axis_name))
 
-    def add_display_data_to_existing_axis(
-        self, axis_data: DisplayData, axis: DimensionalAxis
-    ) -> None:
+    def add_display_data_to_existing_axis(self, axis_data: DisplayData, axis: DimensionalAxis) -> None:
         """Add `DisplayData` to an existing `DimensionalAxis`"""
         # Update axis data display units to match the axis
         axis_data.set_display_units(axis.units)
@@ -257,6 +258,30 @@ class DimensionalPlot:
                                     )
                             axis.range_min = min(min(y_values), axis.range_min)
                             axis.range_max = max(max(y_values), axis.range_max)
+                            if display_data.x_axis is None:
+                                if isinstance(display_data.x_axis, DimensionalData):
+                                    x_axis_values = koozie.convert(
+                                        self.x_axis.data_values, self.x_axis.native_units, self.x_axis.display_units
+                                    )
+                                else:
+                                    x_axis_values = self.x_axis.data_values
+                            else:
+                                if isinstance(display_data.x_axis, DimensionalData) and isinstance(
+                                    self.x_axis, DimensionalData
+                                ):
+                                    x_axis_values = koozie.convert(
+                                        display_data.x_axis.data_values,
+                                        display_data.x_axis.native_units,
+                                        self.x_axis.display_units,
+                                    )
+                                elif isinstance(display_data.x_axis, TimeSeriesAxis) and isinstance(
+                                    self.x_axis, TimeSeriesAxis
+                                ):
+                                    x_axis_values = display_data.x_axis.data_values
+                                else:
+                                    raise RuntimeError(
+                                        f"DispalyData x-axis, {display_data.x_axis.name}, and Plot x-axis, {self.x_axis.name}, must both be DimensionalData or TimeSeriesAxes."
+                                    )
                             self.figure.add_trace(
                                 Scatter(
                                     x=self.x_axis.data_values,
@@ -291,16 +316,10 @@ class DimensionalPlot:
                         is_base_y_axis = subplot_base_y_axis_id == y_axis_id
                         self.figure.layout[f"yaxis{y_axis_id}"] = {
                             "title": axis.get_axis_label(),
-                            "domain": (
-                                subplot_domains[subplot_index]
-                                if subplot_base_y_axis_id == y_axis_id
-                                else None
-                            ),
+                            "domain": (subplot_domains[subplot_index] if subplot_base_y_axis_id == y_axis_id else None),
                             "side": y_axis_side,
                             "anchor": f"x{x_axis_id}",
-                            "overlaying": (
-                                f"y{subplot_base_y_axis_id}" if not is_base_y_axis else None
-                            ),
+                            "overlaying": (f"y{subplot_base_y_axis_id}" if not is_base_y_axis else None),
                             "tickmode": "sync" if not is_base_y_axis else None,
                             "autoshift": True if axis_number > 1 else None,
                             "showgrid":True,
@@ -316,11 +335,7 @@ class DimensionalPlot:
                         "title": x_axis_label if is_last_subplot else None,
                         "anchor": f"y{subplot_base_y_axis_id}",
                         "domain": [0.0, 1.0],
-                        "matches": (
-                            f"x{number_of_subplots}"
-                            if subplot_number < number_of_subplots
-                            else None
-                        ),
+                        "matches": (f"x{number_of_subplots}" if subplot_number < number_of_subplots else None),
                         "showticklabels": None if is_last_subplot else False,
                         "ticks":"outside",
                         "tickson":"boundaries",
