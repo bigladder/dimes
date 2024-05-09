@@ -17,11 +17,11 @@ GREY = "rgba(128,128,128,0.3)"
 class LineProperties:
     color: Union[str, None] = None
     line_type: Union[str, None] = None
-    line_width: Union[int, None] = None
+    line_width: Union[SupportsFloat, None] = None
     marker_symbol: Union[str, None] = None
-    marker_size: Union[int, None] = None
+    marker_size: Union[SupportsFloat, None] = None
     marker_line_color: Union[str, None] = None
-    marker_line_width: Union[int, None] = None
+    marker_line_width: Union[SupportsFloat, None] = None
     marker_fill_color: Union[str, None] = None
 
     def get_line_mode(self):
@@ -51,12 +51,12 @@ class LineProperties:
 
 @dataclass
 class MarkersOnly(LineProperties):
-    line_width: Union[int, None] = 0
+    line_width: Union[SupportsFloat, None] = 0
 
 
 @dataclass
 class LinesOnly(LineProperties):
-    marker_size: Union[int, None] = 0
+    marker_size: Union[SupportsFloat, None] = 0
 
 
 
