@@ -13,7 +13,7 @@ class TimeSeriesData(DisplayData):
 class TimeSeriesPlot(DimensionalPlot):
     """Time series plot."""
 
-    def __init__(self, time_values: list, plot_title: Union[str, None] = None):
-        super().__init__(time_values, plot_title)
+    def __init__(self, time_values: list, title: Union[str, None] = None):
+        super().__init__(time_values, title)
         self.add_time_series = self.add_display_data
         self.time_values = self.x_axis.data_values

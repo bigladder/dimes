@@ -185,7 +185,7 @@ class DimensionalPlot:
     def __init__(
         self,
         x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime]],
-        plot_title: Union[str, None] = None,
+        title: Union[str, None] = None,
     ):
         self.figure = Figure()
         self.x_axis: Union[DimensionalData, TimeSeriesAxis]
@@ -198,7 +198,7 @@ class DimensionalPlot:
             self.x_axis = x_axis
         self.subplots: List[Union[DimensionalSubplot, None]] = [None]
         self.is_finalized = False
-        self.figure.layout["title"] = plot_title
+        self.figure.layout["title"] = title
 
     def add_display_data(
         self,
