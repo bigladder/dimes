@@ -166,6 +166,7 @@ def test_is_visible():
                 marker_size=5,
                 marker_line_color="black",
                 marker_fill_color="white",
+                marker_line_width=1.5
             ),
             is_visible = True,
             name = "Visible"
