@@ -4,23 +4,28 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 import warnings
 from datetime import datetime
+import math
+import bisect
 
 from plotly.graph_objects import Figure, Scatter  # type: ignore
 
 import koozie
+
+WHITE = "white"
+BLACK = "black"
+GREY = "rgba(128,128,128,0.3)"
 
 
 @dataclass
 class LineProperties:
     color: Union[str, None] = None
     line_type: Union[str, None] = None
-    line_width: Union[int, None] = None
+    line_width: Union[SupportsFloat, None] = None
     marker_symbol: Union[str, None] = None
-    marker_size: Union[int, None] = None
+    marker_size: Union[SupportsFloat, None] = None
     marker_line_color: Union[str, None] = None
-    marker_line_width: Union[int, None] = None
+    marker_line_width: Union[SupportsFloat, None] = None
     marker_fill_color: Union[str, None] = None
-    is_visible: bool = True
 
     def get_line_mode(self):
 
@@ -49,12 +54,12 @@ class LineProperties:
 
 @dataclass
 class MarkersOnly(LineProperties):
-    line_width: Union[int, None] = 0
+    line_width: Union[SupportsFloat, None] = 0
 
 
 @dataclass
 class LinesOnly(LineProperties):
-    marker_size: Union[int, None] = 0
+    marker_size: Union[SupportsFloat, None] = 0
 
 
 class DimensionalData:
@@ -105,7 +110,9 @@ class DisplayData(DimensionalData):
         display_units: Union[str, None] = None,
         line_properties: LineProperties = LineProperties(),
         is_visible: bool = True,
+        legend_group: Union[str, None] = None,
         x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime], None] = None,
+        y_axis_min: Union[SupportsFloat, None] = 0.0,
     ):
         super().__init__(data_values, name, native_units, display_units)
         self.x_axis: Union[DimensionalData, TimeSeriesAxis, None]
@@ -116,8 +123,10 @@ class DisplayData(DimensionalData):
                 self.x_axis = DimensionalData(x_axis)  # type: ignore[arg-type]
         else:
             self.x_axis = x_axis
+        self.y_axis_min = y_axis_min
         self.line_properties = line_properties
         self.is_visible = is_visible
+        self.legend_group = legend_group
 
 
 class DimensionalAxis:
@@ -128,10 +137,28 @@ class DimensionalAxis:
         self.units = display_data.display_units
         self.dimensionality = display_data.dimensionality
         self.display_data_set: List[DisplayData] = [display_data]
+        self.range_min: SupportsFloat = float("inf")
+        self.range_max: SupportsFloat = -float("inf")
 
     def get_axis_label(self) -> str:
         """Make the string that appears as the axis label"""
         return f"{self.name} [{self.units}]"
+
+    @staticmethod
+    def get_axis_range(value_min, value_max):
+        max_ticks = 6
+        tick_scale_options = [1, 2, 5, 10]
+
+        value_range = value_max - value_min
+        min_tick_size = value_range / max_ticks
+        magnitude = 10 ** math.floor(math.log(min_tick_size, 10))
+        residual = min_tick_size / magnitude
+        tick_size = (
+            tick_scale_options[bisect.bisect_right(tick_scale_options, residual)] if residual < 10 else 10
+        ) * magnitude
+        range_min = math.floor(value_min / tick_size) * tick_size
+        range_max = math.ceil(value_max / tick_size) * tick_size
+        return [range_min, range_max]
 
 
 class DimensionalSubplot:
@@ -169,7 +196,11 @@ class DimensionalSubplot:
 class DimensionalPlot:
     """Plot of dimensional data."""
 
-    def __init__(self, x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime]]):
+    def __init__(
+        self,
+        x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime]],
+        title: Union[str, None] = None,
+    ):
         self.figure = Figure()
         self.x_axis: Union[DimensionalData, TimeSeriesAxis]
         if isinstance(x_axis, list):
@@ -181,6 +212,7 @@ class DimensionalPlot:
             self.x_axis = x_axis
         self.subplots: List[Union[DimensionalSubplot, None]] = [None]
         self.is_finalized = False
+        self.figure.layout["title"] = title
 
     def add_display_data(
         self,
@@ -204,10 +236,20 @@ class DimensionalPlot:
     def finalize_plot(self):
         """Once all DisplayData objects have been added, generate plot and subplots."""
         if not self.is_finalized:
+            grid_line_width = 1.5
             at_least_one_subplot = False
             number_of_subplots = len(self.subplots)
             subplot_domains = get_subplot_domains(number_of_subplots)
             absolute_axis_index = 0  # Used to track axes data in the plot
+            self.figure.layout["plot_bgcolor"] = WHITE
+            self.figure.layout["font_color"] = BLACK
+            self.figure.layout["title_x"] = 0.5
+            xy_common_axis_format = {
+                "mirror": True,
+                "linecolor": BLACK,
+                "linewidth": grid_line_width,
+                "zeroline": False,
+            }
             x_axis_label = f"{self.x_axis.name}"
             if isinstance(self.x_axis, DimensionalData):
                 x_axis_label += f" [{self.x_axis.display_units}]"
@@ -221,6 +263,18 @@ class DimensionalPlot:
                         y_axis_id = absolute_axis_index + 1
                         for display_data in axis.display_data_set:
                             at_least_one_subplot = True
+                            y_values = koozie.convert(
+                                display_data.data_values,
+                                display_data.native_units,
+                                axis.units,
+                            )
+                            axis.range_min = min(min(y_values), axis.range_min)
+                            if display_data.y_axis_min is not None:
+                                data_y_axis_min = koozie.convert(
+                                    display_data.y_axis_min, display_data.native_units, axis.units
+                                )
+                                axis.range_min = min(data_y_axis_min, axis.range_min)
+                            axis.range_max = max(max(y_values), axis.range_max)
                             if display_data.x_axis is None:
                                 if isinstance(display_data.x_axis, DimensionalData):
                                     x_axis_values = koozie.convert(
@@ -248,16 +302,12 @@ class DimensionalPlot:
                             self.figure.add_trace(
                                 Scatter(
                                     x=x_axis_values,
-                                    y=koozie.convert(
-                                        display_data.data_values,
-                                        display_data.native_units,
-                                        axis.units,
-                                    ),
+                                    y=y_values,
                                     name=display_data.name,
                                     yaxis=f"y{y_axis_id}",
                                     xaxis=f"x{x_axis_id}",
                                     mode=display_data.line_properties.get_line_mode(),
-                                    visible=("legendonly" if not display_data.line_properties.is_visible else True),
+                                    visible=("legendonly" if not display_data.is_visible else True),
                                     line={
                                         "color": display_data.line_properties.color,
                                         "dash": display_data.line_properties.line_type,
@@ -272,6 +322,8 @@ class DimensionalPlot:
                                             "width": display_data.line_properties.marker_line_width,
                                         },
                                     },
+                                    legendgroup=display_data.legend_group,
+                                    legendgrouptitle={"text": display_data.legend_group},
                                 ),
                             )
                         is_base_y_axis = subplot_base_y_axis_id == y_axis_id
@@ -283,7 +335,12 @@ class DimensionalPlot:
                             "overlaying": (f"y{subplot_base_y_axis_id}" if not is_base_y_axis else None),
                             "tickmode": "sync" if not is_base_y_axis else None,
                             "autoshift": True if axis_number > 1 else None,
+                            "showgrid": True,
+                            "gridcolor": GREY,
+                            "gridwidth": grid_line_width,
+                            "range": axis.get_axis_range(axis.range_min, axis.range_max),
                         }
+                        self.figure.layout[f"yaxis{y_axis_id}"].update(xy_common_axis_format)
                         absolute_axis_index += 1
                         y_axis_side = "right" if y_axis_side == "left" else "left"
                     is_last_subplot = subplot_number == number_of_subplots
@@ -293,7 +350,12 @@ class DimensionalPlot:
                         "domain": [0.0, 1.0],
                         "matches": (f"x{number_of_subplots}" if subplot_number < number_of_subplots else None),
                         "showticklabels": None if is_last_subplot else False,
+                        "ticks": None if not is_last_subplot else "outside",
+                        "tickson": None if not is_last_subplot else "boundaries",
+                        "tickcolor": None if not is_last_subplot else BLACK,
+                        "tickwidth": None if not is_last_subplot else grid_line_width,
                     }
+                    self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
             if not at_least_one_subplot:

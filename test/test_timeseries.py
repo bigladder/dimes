@@ -2,7 +2,8 @@
 
 from pathlib import Path
 import pytest
-from dimes import TimeSeriesPlot, TimeSeriesData, LineProperties
+from dimes import TimeSeriesPlot, TimeSeriesData, LineProperties, LinesOnly
+from dimes.common import DimensionalAxis
 
 TESTING_DIRECTORY = Path("test_outputs")
 TESTING_DIRECTORY.mkdir(exist_ok=True)
@@ -10,7 +11,7 @@ TESTING_DIRECTORY.mkdir(exist_ok=True)
 
 def test_basic_plot():
     """Test basic plot"""
-    plot = TimeSeriesPlot([1, 2, 3, 4, 5])
+    plot = TimeSeriesPlot([1, 2, 3, 4, 5], "Title Basic Plot")
     plot.add_time_series(TimeSeriesData([x**2 for x in plot.time_values]))
     plot.add_time_series(TimeSeriesData([x**3 for x in plot.time_values]))
 
@@ -65,24 +66,15 @@ def test_multi_plot():
     plot = TimeSeriesPlot([1, 2, 3, 4, 5])
     # Time series & axis names explicit, subplot default to 1
     plot.add_time_series(
-        TimeSeriesData(
-            [x**2 for x in plot.time_values], name="Power", native_units="hp", display_units="W"
-        ),
+        TimeSeriesData([x**2 for x in plot.time_values], name="Power", native_units="hp", display_units="W"),
         axis_name="Power or Capacity",
     )
     # Time series name explicit, axis automatically determined by dimensionality, subplot default to 1
     plot.add_time_series(
-        TimeSeriesData(
-            [x * 10 for x in plot.time_values],
-            name="Capacity",
-            native_units="kBtu/h",
-            is_visible=False,
-        )
+        TimeSeriesData([x * 10 for x in plot.time_values], name="Capacity", native_units="kBtu/h", is_visible=False)
     )
     # Time series and axis will get name from dimensionality, subplot default to 1, new axis for new dimension on existing subplot
-    plot.add_time_series(
-        TimeSeriesData([x for x in plot.time_values], native_units="ft", display_units="cm")
-    )
+    plot.add_time_series(TimeSeriesData([x for x in plot.time_values], native_units="ft", display_units="cm"))
     # Time series & axis names and subplot number are all explicit
     plot.add_time_series(
         TimeSeriesData([x**3 for x in plot.time_values], name="Number of Apples"),
@@ -121,7 +113,7 @@ def test_basic_marker():
 
 
 def test_missing_marker_symbol():
-    """Test missing marker symbol, default symbol should be 'circle'"""
+    """Test missing marker symbol, default symbol should be 'circle'."""
     plot = TimeSeriesPlot([1, 2, 3, 4, 5])
     plot.add_time_series(
         TimeSeriesData(
@@ -135,3 +127,60 @@ def test_missing_marker_symbol():
         )
     )
     plot.write_html_plot(Path(TESTING_DIRECTORY, "missing_marker_symbol.html"))
+
+
+def test_legend_group():
+    """Test legend group and legend group title."""
+    plot = TimeSeriesPlot([1, 2, 3, 4, 5])
+    city_data = {
+        "City_A": {2000: [x**2 for x in plot.time_values], 2010: [x**3 for x in plot.time_values]},
+        "City_B": {2000: [x**2.5 for x in plot.time_values], 2010: [x**3.5 for x in plot.time_values]},
+    }
+    for city, year_data in city_data.items():
+        for year, data in year_data.items():
+            plot.add_time_series(
+                TimeSeriesData(
+                    data,
+                    name=city,
+                    legend_group=str(year),
+                ),
+            )
+    plot.write_html_plot(Path(TESTING_DIRECTORY, "legend_group.html"))
+
+
+def test_is_visible():
+    """Test visibility of lines in plot and legend."""
+    plot = TimeSeriesPlot([1, 2, 3, 4, 5])
+    plot.add_time_series(
+        TimeSeriesData(
+            [x**2 for x in plot.time_values],
+            line_properties=LineProperties(
+                color="blue", marker_size=5, marker_line_color="black", marker_fill_color="white", marker_line_width=1.5
+            ),
+            is_visible=True,
+            name="Visible",
+        )
+    )
+    plot.add_time_series(
+        TimeSeriesData(
+            [x**3 for x in plot.time_values],
+            line_properties=LinesOnly(
+                color="green",
+                marker_size=5,
+                marker_line_color="black",
+                marker_fill_color="white",
+            ),
+            is_visible=False,
+            name="Legend Only",
+        )
+    )
+    plot.write_html_plot(Path(TESTING_DIRECTORY, "is_visible.html"))
+
+
+def test_get_axis_range():
+    checks = [([0, 2], [0, 2]), ([0, 23.5], [0, 25])]
+
+    for check in checks:
+        min_value = check[0][0]
+        max_value = check[0][1]
+        assert DimensionalAxis.get_axis_range(min_value, max_value) == check[1]
