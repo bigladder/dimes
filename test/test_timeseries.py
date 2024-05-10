@@ -3,6 +3,7 @@
 from pathlib import Path
 import pytest
 from dimes import TimeSeriesPlot, TimeSeriesData, LineProperties, LinesOnly
+from dimes.common import DimensionalAxis
 
 TESTING_DIRECTORY = Path("test_outputs")
 TESTING_DIRECTORY.mkdir(exist_ok=True)
@@ -174,3 +175,12 @@ def test_is_visible():
         )
     )
     plot.write_html_plot(Path(TESTING_DIRECTORY, "is_visible.html"))
+
+
+def test_get_axis_range():
+    checks = [([0, 2], [0, 2]), ([0, 23.5], [0, 25])]
+
+    for check in checks:
+        min_value = check[0][0]
+        max_value = check[0][1]
+        assert DimensionalAxis.get_axis_range(min_value, max_value) == check[1]

@@ -4,6 +4,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 import warnings
 from datetime import datetime
+import math
+import bisect
 
 from plotly.graph_objects import Figure, Scatter  # type: ignore
 
@@ -110,6 +112,7 @@ class DisplayData(DimensionalData):
         is_visible: bool = True,
         legend_group: Union[str, None] = None,
         x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime], None] = None,
+        y_axis_min: Union[SupportsFloat, None] = 0.0,
     ):
         super().__init__(data_values, name, native_units, display_units)
         self.x_axis: Union[DimensionalData, TimeSeriesAxis, None]
@@ -120,6 +123,7 @@ class DisplayData(DimensionalData):
                 self.x_axis = DimensionalData(x_axis)  # type: ignore[arg-type]
         else:
             self.x_axis = x_axis
+        self.y_axis_min = y_axis_min
         self.line_properties = line_properties
         self.is_visible = is_visible
         self.legend_group = legend_group
@@ -142,9 +146,19 @@ class DimensionalAxis:
 
     @staticmethod
     def get_axis_range(value_min, value_max):
-        range_buffer = 0.1
-        range_values = value_max - value_min
-        return [value_min - range_values * range_buffer, value_max + range_values * range_buffer]
+        max_ticks = 6
+        tick_scale_options = [1, 2, 5, 10]
+
+        value_range = value_max - value_min
+        min_tick_size = value_range / max_ticks
+        magnitude = 10 ** math.floor(math.log(min_tick_size, 10))
+        residual = min_tick_size / magnitude
+        tick_size = (
+            tick_scale_options[bisect.bisect_right(tick_scale_options, residual)] if residual < 10 else 10
+        ) * magnitude
+        range_min = math.floor(value_min / tick_size) * tick_size
+        range_max = math.ceil(value_max / tick_size) * tick_size
+        return [range_min, range_max]
 
 
 class DimensionalSubplot:
@@ -234,9 +248,7 @@ class DimensionalPlot:
                 "mirror": True,
                 "linecolor": BLACK,
                 "linewidth": grid_line_width,
-                "zeroline": True,
-                "zerolinecolor": GREY,
-                "zerolinewidth": grid_line_width,
+                "zeroline": False,
             }
             x_axis_label = f"{self.x_axis.name}"
             if isinstance(self.x_axis, DimensionalData):
@@ -257,6 +269,11 @@ class DimensionalPlot:
                                 axis.units,
                             )
                             axis.range_min = min(min(y_values), axis.range_min)
+                            if display_data.y_axis_min is not None:
+                                data_y_axis_min = koozie.convert(
+                                    display_data.y_axis_min, display_data.native_units, axis.units
+                                )
+                                axis.range_min = min(data_y_axis_min, axis.range_min)
                             axis.range_max = max(max(y_values), axis.range_max)
                             if display_data.x_axis is None:
                                 if isinstance(display_data.x_axis, DimensionalData):
@@ -333,10 +350,10 @@ class DimensionalPlot:
                         "domain": [0.0, 1.0],
                         "matches": (f"x{number_of_subplots}" if subplot_number < number_of_subplots else None),
                         "showticklabels": None if is_last_subplot else False,
-                        "ticks": "outside",
-                        "tickson": "boundaries",
-                        "tickcolor": BLACK,
-                        "tickwidth": grid_line_width,
+                        "ticks": None if not is_last_subplot else "outside",
+                        "tickson": None if not is_last_subplot else "boundaries",
+                        "tickcolor": None if not is_last_subplot else BLACK,
+                        "tickwidth": None if not is_last_subplot else grid_line_width,
                     }
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
                 else:
