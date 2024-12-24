@@ -9,5 +9,5 @@ from .common import (
     DimensionalData,
 )
 from .timeseries import TimeSeriesPlot, TimeSeriesData
-from .griddeddata import GridAxis, GridPointData, RegularGridData
+from .griddeddata import GridAxis, GridPointData, RegularGridData, DataSelection
 from plotly.colors import sample_colorscale

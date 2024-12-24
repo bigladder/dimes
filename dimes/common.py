@@ -221,6 +221,10 @@ class DimensionalPlot:
         axis_name: Union[str, None] = None,
     ) -> None:
         """Add a DisplayData object to the plot."""
+        # Assign x-axis if it's not already defined
+        if display_data.x_axis is None:
+            display_data.x_axis = self.x_axis
+
         if subplot_number is None:
             # Default case
             subplot_number = len(self.subplots)
