@@ -4,6 +4,7 @@ from typing import List, Dict, Tuple, SupportsFloat
 from enum import Enum
 from dataclasses import dataclass
 from itertools import product as cartesian_product
+from csv import writer
 
 from koozie import convert
 
@@ -30,6 +31,8 @@ class DataSelection:
     Class for selecting data to display in a chart
     """
 
+    # TODO: Add color and y-axis name and precision?
+
     name: str
     units: str
 
@@ -42,8 +45,9 @@ class RegularGridData:
         # Check sizes
         self.grid_axis_step_size = [0] * len(self.grid_axes)
         number_of_grid_points = 1
-        for i, axis in enumerate(self.grid_axes):
-            self.grid_axis_step_size[i] = number_of_grid_points
+        for i, axis in enumerate(reversed(self.grid_axes)):
+            i_reverse = len(self.grid_axes) - 1 - i
+            self.grid_axis_step_size[i_reverse] = number_of_grid_points
             number_of_grid_points *= len(axis.data_values)
 
         for grid_point_data_set in self.grid_point_data_sets:
@@ -55,11 +59,11 @@ class RegularGridData:
 
         # TODO: Make interpolator
 
-    def get_grid_point_index(self, coordinates: list[int] | tuple[int, ...]) -> int:
-        grid_point_index = 0
-        for axis_index in range(len(self.grid_axes)):
-            grid_point_index += coordinates[axis_index] * self.grid_axis_step_size[axis_index]
-        return grid_point_index
+    def get_grid_point_index(self, grid_indices: List[int] | tuple[int, ...]) -> int:
+        index = 0
+        for axis_index, point_index in enumerate(grid_indices):
+            index += point_index * self.grid_axis_step_size[axis_index]
+        return index
 
     def get_grid_point_indices(
         self, axis_indices: list[list[int]]  # For each axis, list the axis indices where data is requested
@@ -71,13 +75,36 @@ class RegularGridData:
             value_indices.append(self.get_grid_point_index(combination))
         return value_indices
 
+    def write_to_csv(self, output_path):
+        grid_axes_indices = []
+        row = []
+        for grid_axis in self.grid_axes:
+            grid_axes_indices.append(list(range(len(grid_axis.data_values))))
+            row.append(f"{grid_axis.name} [{grid_axis.display_units}]")
+
+        for grid_point_data_set in self.grid_point_data_sets:
+            row.append(f"{grid_point_data_set.name} [{grid_point_data_set.display_units}]")
+
+        with open(output_path, "w", encoding="UTF-8") as csv_object:
+            writer_object = writer(csv_object)
+            writer_object.writerow(row)  # Header
+
+            for combination in cartesian_product(*grid_axes_indices):
+                row = []
+                for i, grid_axis in enumerate(self.grid_axes):
+                    row.append(grid_axis.data_values[combination[i]])
+                combination_index = self.get_grid_point_index(combination)
+                for grid_point_data_set in self.grid_point_data_sets:
+                    row.append(grid_point_data_set.data_values[combination_index])
+                writer_object.writerow(row)
+
     def make_plot(
         self,
         x_grid_axis: DataSelection,  # Grid axis to use as the x-axis in the plot
         display_data: (
             list[DataSelection] | DataSelection | None
-        ),  # What grid point data to plot. Use None to plot all grid point data.
-        legend_grid_axis: DataSelection | None = None,  # TODO: Name of grid axis to use in the legend of the plot
+        ) = None,  # What grid point data to plot. Use None to plot all grid point data.
+        legend_grid_axis: DataSelection | None = None,  # Name of grid axis to use in the legend of the plot
         constrained_grid_axes: list[tuple[DataSelection, float]] | None = None,  # Constraints on axis not plotted
     ) -> DimensionalPlot:
 
@@ -131,11 +158,11 @@ class RegularGridData:
                 )
         constrained_grid_axis_names = [axis[0].name for axis in constrained_grid_axes]
 
-        # TODO: Add additional grid axes
         axis_indices = [None] * len(self.grid_axes)
         x_axis_index = None
         legend_axis_index = None
 
+        title_text: list[str] = []
         for i, grid_axis in enumerate(self.grid_axes):
             if grid_axis.name == x_grid_axis.name:
                 x_axis_index = i
@@ -156,9 +183,10 @@ class RegularGridData:
                             else convert(value, selection.units, grid_axis.native_units)
                         )
                         axis_indices[i] = [find_index_of_nearest_value(grid_axis.data_values, matching_value)[0]]
+                        title_text.append(f"{selection.name} = {matching_value:.2f} [{selection.units}]")
 
         # Create plot
-        plot = DimensionalPlot(self.grid_axes[x_axis_index])
+        plot = DimensionalPlot(self.grid_axes[x_axis_index], title="<br>".join(title_text))
 
         if legend_grid_axis is not None:
             # Loop over legend axis values and add display data for each
@@ -167,7 +195,7 @@ class RegularGridData:
                 plot_axis_indices[legend_axis_index] = [index]
                 grid_point_indices = self.get_grid_point_indices(axis_indices=plot_axis_indices)
                 for grid_data_index, display_variable in enumerate(display_data):
-                    grid_point_data_set = self.grid_point_data_sets[grid_data_index]
+                    grid_point_data_set = self.grid_point_data_sets[grid_point_data_set_indices[grid_data_index]]
                     data_values = [grid_point_data_set.data_values[i] for i in grid_point_indices]
                     grid_axis = self.grid_axes[legend_axis_index]
                     legend_axis_value = convert(
@@ -176,17 +204,17 @@ class RegularGridData:
                     plot.add_display_data(
                         DisplayData(
                             data_values,
-                            name=f"{legend_grid_axis.name} = {legend_axis_value} [{legend_grid_axis.units}]",
+                            name=f"{legend_grid_axis.name} = {legend_axis_value:.1f} [{legend_grid_axis.units}]",
                             native_units=grid_point_data_set.native_units,
                             display_units=display_variable.units,
-                            legend_group=f"{display_variable.name} [{display_variable.units}]",
+                            legend_group=f"{display_variable.name}",
                         ),
                         axis_name=display_variable.name,
                     )
         else:
             grid_point_indices = self.get_grid_point_indices(axis_indices=axis_indices)
             for grid_data_index, display_variable in enumerate(display_data):
-                grid_point_data_set = self.grid_point_data_sets[grid_data_index]
+                grid_point_data_set = self.grid_point_data_sets[grid_point_data_set_indices[grid_data_index]]
                 data_values = [grid_point_data_set.data_values[i] for i in grid_point_indices]
                 plot.add_display_data(
                     DisplayData(
@@ -198,12 +226,6 @@ class RegularGridData:
                 )
 
         return plot
-
-    def get_grid_point_index(self, grid_indices: List[int]) -> int:
-        index = 0
-        for axis_index, point_index in enumerate(grid_indices):
-            index += point_index * self.grid_axis_step_size[axis_index]
-        return index
 
 
 def find_index_of_nearest_value(axis: List[SupportsFloat], value: SupportsFloat) -> Tuple[int, SupportsFloat]:

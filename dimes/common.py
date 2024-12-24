@@ -150,6 +150,8 @@ class DimensionalAxis:
         tick_scale_options = [1, 2, 5, 10]
 
         value_range = value_max - value_min
+        if value_range == 0.0:
+            return [value_min, value_max]
         min_tick_size = value_range / max_ticks
         magnitude = 10 ** math.floor(math.log(min_tick_size, 10))
         residual = min_tick_size / magnitude
@@ -256,7 +258,7 @@ class DimensionalPlot:
             }
             x_axis_label = f"{self.x_axis.name}"
             if isinstance(self.x_axis, DimensionalData):
-                x_axis_label += f" [{self.x_axis.display_units}]"
+                x_axis_label += f" [{self.x_axis.display_units}]"  # TODO: Use pretty format
             for subplot_index, subplot in enumerate(self.subplots):
                 subplot_number = subplot_index + 1
                 x_axis_id = subplot_number

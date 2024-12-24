@@ -633,14 +633,29 @@ def test_2d_data():
                 GridPointData(values, name=schema_info["Display Name"], native_units=schema_info["Units"])
             )
 
+    cops = []
+    eirs = []
+    for index in range(len(grided_data_sets[0].data_values)):
+        cop = (
+            raw_data["lookup_variables"]["net_evaporator_capacity"][index]
+            / raw_data["lookup_variables"]["input_power"][index]
+        )
+        eir = 1 / cop
+        cops.append(cop)
+        eirs.append(eir)
     # TODO: Make derivative outputs
+
+    grided_data_sets.append(GridPointData(cops, name="COP", native_units=""))
+    grided_data_sets.append(GridPointData(eirs, name="Energy Input Ratio", native_units=""))
 
     gridded_data = RegularGridData(grid_axes, grided_data_sets)
     plot = gridded_data.make_plot(
-        display_data=DataSelection("Net Evaporator Capacity", "ton_ref"),
         x_grid_axis=DataSelection("Condenser Air Entering Drybulb Temperature", "degF"),
+        # display_data=DataSelection("Net Evaporator Capacity", "W"),
         legend_grid_axis=DataSelection("Evaporator Liquid Leaving Temperature", "degF"),
-        constrained_grid_axes=[(DataSelection("Compressor Sequence Number", ""), 4)],
+        constrained_grid_axes=[(DataSelection("Compressor Sequence Number", ""), 1)],
     )
 
     plot.write_html_plot(Path(TESTING_DIRECTORY, "capacity.html"))
+
+    gridded_data.write_to_csv(Path(TESTING_DIRECTORY, "grid-test.csv"))
