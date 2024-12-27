@@ -10,10 +10,29 @@ import bisect
 from plotly.graph_objects import Figure, Scatter  # type: ignore
 
 import koozie
+from plotly.colors import sample_colorscale
+
 
 WHITE = "white"
 BLACK = "black"
 GREY = "rgba(128,128,128,0.3)"
+
+COLOR_SCALE_SEQUENCE = [
+    "blues",
+    "reds",
+    "greens",
+    "purples",
+    "oranges",
+    "greys",
+]  # From https://plotly.com/python/builtin-colorscales/ and https://plotly.com/python/discrete-color/
+
+
+def get_color_from_scale(pallet, ratio, minimum=0.25, reverse=True):
+
+    scale_ratio = minimum + (1.0 - minimum) * ratio
+    if reverse:
+        scale_ratio = minimum + (1.0 - minimum) * (1.0 - ratio)
+    return sample_colorscale(pallet, scale_ratio)[0]
 
 
 @dataclass

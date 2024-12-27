@@ -5,10 +5,19 @@ from enum import Enum
 from dataclasses import dataclass
 from itertools import product as cartesian_product
 from csv import writer
+from itertools import cycle
+from copy import deepcopy
 
 from koozie import convert, format_units
 
-from .common import DimensionalData, DisplayData, DimensionalPlot
+from .common import (
+    DimensionalData,
+    DisplayData,
+    DimensionalPlot,
+    COLOR_SCALE_SEQUENCE,
+    get_color_from_scale,
+    LineProperties,
+)
 
 
 class GridAxis(DimensionalData):
@@ -190,23 +199,31 @@ class RegularGridData:
 
         if legend_grid_axis is not None:
             # Loop over legend axis values and add display data for each
-            for index in axis_indices[legend_axis_index]:
-                plot_axis_indices = axis_indices
-                plot_axis_indices[legend_axis_index] = [index]
-                grid_point_indices = self.get_grid_point_indices(axis_indices=plot_axis_indices)
-                for grid_data_index, display_variable in enumerate(display_data):
-                    grid_point_data_set = self.grid_point_data_sets[grid_point_data_set_indices[grid_data_index]]
+            assert legend_axis_index is not None
+            grid_axis = self.grid_axes[legend_axis_index]
+            legend_axis_indices = axis_indices[legend_axis_index]
+            grid_axis_min = grid_axis.data_values[legend_axis_indices[0]]
+            grid_axis_max = grid_axis.data_values[legend_axis_indices[-1]]
+            color_scale_cycler = cycle(COLOR_SCALE_SEQUENCE)
+            for grid_data_index, display_variable in enumerate(display_data):
+                grid_point_data_set = self.grid_point_data_sets[grid_point_data_set_indices[grid_data_index]]
+                color_scale = next(color_scale_cycler)
+                for index in legend_axis_indices:
+                    plot_axis_indices = deepcopy(axis_indices)
+                    plot_axis_indices[legend_axis_index] = [index]
+                    grid_point_indices = self.get_grid_point_indices(axis_indices=plot_axis_indices)
                     data_values = [grid_point_data_set.data_values[i] for i in grid_point_indices]
-                    grid_axis = self.grid_axes[legend_axis_index]
-                    legend_axis_value = convert(
-                        grid_axis.data_values[index], grid_axis.native_units, legend_grid_axis.units
-                    )
+                    grid_axis_value = grid_axis.data_values[index]
+                    grid_axis_ratio = (grid_axis_max - grid_axis_value) / (grid_axis_max - grid_axis_min)
+                    line_color = get_color_from_scale(color_scale, grid_axis_ratio)
+                    legend_axis_value = convert(grid_axis_value, grid_axis.native_units, legend_grid_axis.units)
                     plot.add_display_data(
                         DisplayData(
                             data_values,
                             name=f"{legend_grid_axis.name} = {legend_axis_value:.1f} [{format_units(legend_grid_axis.units)}]",
                             native_units=grid_point_data_set.native_units,
                             display_units=display_variable.units,
+                            line_properties=LineProperties(color=line_color),
                             legend_group=f"{display_variable.name}",
                         ),
                         axis_name=display_variable.name,
