@@ -643,7 +643,6 @@ def test_2d_data():
         eir = 1 / cop
         cops.append(cop)
         eirs.append(eir)
-    # TODO: Make derivative outputs
 
     grided_data_sets.append(GridPointData(cops, name="COP", native_units=""))
     grided_data_sets.append(GridPointData(eirs, name="Energy Input Ratio", native_units=""))

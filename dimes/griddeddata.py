@@ -57,10 +57,10 @@ class RegularGridData:
         for i, axis in enumerate(reversed(self.grid_axes)):
             i_reverse = len(self.grid_axes) - 1 - i
             self.grid_axis_step_size[i_reverse] = number_of_grid_points
-            number_of_grid_points *= len(axis.data_values)
+            number_of_grid_points *= len(list(axis.data_values))
 
         for grid_point_data_set in self.grid_point_data_sets:
-            size = len(grid_point_data_set.data_values)
+            size = len(list(grid_point_data_set.data_values))
             if size != number_of_grid_points:
                 raise RuntimeError(
                     f"grid_point_data_set, {grid_point_data_set.name}, size ({size}) does not match size of grid, ({number_of_grid_points})."
@@ -101,10 +101,10 @@ class RegularGridData:
             for combination in cartesian_product(*grid_axes_indices):
                 row = []
                 for i, grid_axis in enumerate(self.grid_axes):
-                    row.append(grid_axis.data_values[combination[i]])
+                    row.append(list(grid_axis.data_values)[combination[i]])
                 combination_index = self.get_grid_point_index(combination)
                 for grid_point_data_set in self.grid_point_data_sets:
-                    row.append(grid_point_data_set.data_values[combination_index])
+                    row.append(list(grid_point_data_set.data_values)[combination_index])
                 writer_object.writerow(row)
 
     def make_plot(
@@ -246,5 +246,5 @@ class RegularGridData:
 
 
 def find_index_of_nearest_value(axis: List[SupportsFloat], value: SupportsFloat) -> Tuple[int, SupportsFloat]:
-    index = min(range(len(axis)), key=lambda i: abs(axis[i] - value))
+    index = min(range(len(axis)), key=lambda i: abs(float(axis[i]) - float(value)))
     return index, axis[index]
