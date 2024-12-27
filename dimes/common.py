@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Tuple, List, SupportsFloat
+from typing import SupportsFloat
 from collections.abc import Iterable
 from dataclasses import dataclass
 import warnings
@@ -37,14 +37,14 @@ def get_color_from_scale(pallet, ratio, minimum=0.25, reverse=True):
 
 @dataclass
 class LineProperties:
-    color: Union[str, None] = None
-    line_type: Union[str, None] = None
-    line_width: Union[SupportsFloat, None] = None
-    marker_symbol: Union[str, None] = None
-    marker_size: Union[SupportsFloat, None] = None
-    marker_line_color: Union[str, None] = None
-    marker_line_width: Union[SupportsFloat, None] = None
-    marker_fill_color: Union[str, None] = None
+    color: str | None = None
+    line_type: str | None = None
+    line_width: SupportsFloat | None = None
+    marker_symbol: str | None = None
+    marker_size: SupportsFloat | None = None
+    marker_line_color: str | None = None
+    marker_line_width: SupportsFloat | None = None
+    marker_fill_color: str | None = None
 
     def get_line_mode(self):
 
@@ -73,21 +73,21 @@ class LineProperties:
 
 @dataclass
 class MarkersOnly(LineProperties):
-    line_width: Union[SupportsFloat, None] = 0
+    line_width: SupportsFloat | None = 0
 
 
 @dataclass
 class LinesOnly(LineProperties):
-    marker_size: Union[SupportsFloat, None] = 0
+    marker_size: SupportsFloat | None = 0
 
 
 class DimensionalData:
     def __init__(
         self,
         data_values: Iterable[SupportsFloat],
-        name: Union[str, None] = None,
+        name: str | None = None,
         native_units: str = "",
-        display_units: Union[str, None] = None,
+        display_units: str | None = None,
     ):
         self.data_values = data_values
         self.native_units = native_units
@@ -95,7 +95,7 @@ class DimensionalData:
         self.name = name if name is not None else str(self.dimensionality).title().replace("[", "").replace("]", "")
         self.set_display_units(display_units)
 
-    def set_display_units(self, units: Union[str, None] = None) -> None:
+    def set_display_units(self, units: str | None = None) -> None:
         """Set the display units for this axis"""
         if units is None:
             self.display_units = self.native_units
@@ -124,18 +124,18 @@ class DisplayData(DimensionalData):
     def __init__(
         self,
         data_values: Iterable[SupportsFloat],
-        name: Union[str, None] = None,
+        name: str | None = None,
         native_units: str = "",
-        display_units: Union[str, None] = None,
+        display_units: str | None = None,
         line_properties: LineProperties = LineProperties(),
         is_visible: bool = True,
-        legend_group: Union[str, None] = None,
-        x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime], None] = None,
-        y_axis_min: Union[SupportsFloat, None] = 0.0,
+        legend_group: str | None = None,
+        x_axis: DimensionalData | TimeSeriesAxis | list[SupportsFloat] | list[datetime] | None = None,
+        y_axis_min: SupportsFloat | None = 0.0,
         y_axis_name: str | None = None,
     ):
         super().__init__(data_values, name, native_units, display_units)
-        self.x_axis: Union[DimensionalData, TimeSeriesAxis, None]
+        self.x_axis: DimensionalData | TimeSeriesAxis | None
         if isinstance(x_axis, list):
             if isinstance(x_axis[0], datetime):
                 self.x_axis = TimeSeriesAxis(x_axis)  # type: ignore[arg-type]
@@ -153,11 +153,11 @@ class DisplayData(DimensionalData):
 class DimensionalAxis:
     """Dimensional 'Y' axis. May contain multiple `DisplayData` objects."""
 
-    def __init__(self, display_data: DisplayData, name: Union[str, None]) -> None:
+    def __init__(self, display_data: DisplayData, name: str | None) -> None:
         self.name = name
         self.units = display_data.display_units
         self.dimensionality = display_data.dimensionality
-        self.display_data_set: List[DisplayData] = [display_data]
+        self.display_data_set: list[DisplayData] = [display_data]
         self.range_min: SupportsFloat = float("inf")
         self.range_max: SupportsFloat = -float("inf")
 
@@ -188,7 +188,7 @@ class DimensionalSubplot:
     """Dimensional subplot. May contain multiple `DimensionalAxis` objects."""
 
     def __init__(self) -> None:
-        self.axes: List[DimensionalAxis] = []
+        self.axes: list[DimensionalAxis] = []
 
     def add_display_data(self, display_data: DisplayData) -> None:
         """Add `DisplayData` to an axis"""
@@ -224,11 +224,11 @@ class DimensionalPlot:
 
     def __init__(
         self,
-        x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime]],
-        title: Union[str, None] = None,
+        x_axis: DimensionalData | TimeSeriesAxis | list[SupportsFloat] | list[datetime],
+        title: str | None = None,
     ):
         self.figure = Figure()
-        self.x_axis: Union[DimensionalData, TimeSeriesAxis]
+        self.x_axis: DimensionalData | TimeSeriesAxis
         if isinstance(x_axis, list):
             if isinstance(x_axis[0], datetime):
                 self.x_axis = TimeSeriesAxis(x_axis)  # type: ignore[arg-type]
@@ -236,14 +236,14 @@ class DimensionalPlot:
                 self.x_axis = DimensionalData(x_axis)  # type: ignore[arg-type]
         else:
             self.x_axis = x_axis
-        self.subplots: List[Union[DimensionalSubplot, None]] = [None]
+        self.subplots: list[DimensionalSubplot | None] = [None]
         self.is_finalized = False
         self.figure.layout["title"] = title
 
     def add_display_data(
         self,
         display_data: DisplayData,
-        subplot_number: Union[int, None] = None,
+        subplot_number: int | None = None,
     ) -> None:
         """Add a DisplayData object to the plot."""
         # Assign x-axis if it's not already defined
@@ -435,7 +435,7 @@ class DimensionalPlot:
         self.figure.write_html(path)
 
 
-def get_subplot_domains(number_of_subplots: int, gap: float = 0.05) -> List[Tuple[float, float]]:
+def get_subplot_domains(number_of_subplots: int, gap: float = 0.05) -> list[tuple[float, float]]:
     """Calculate and return the 'Y' domain ranges for a given number of subplots with the specified gap size."""
     subplot_height = (1.0 - gap * (number_of_subplots - 1)) / number_of_subplots
     subplot_domains = []

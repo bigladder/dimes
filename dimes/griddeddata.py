@@ -1,6 +1,6 @@
 """For making plots of multi-dimensional gridded data."""
 
-from typing import List, Dict, Tuple, SupportsFloat
+from typing import SupportsFloat
 from enum import Enum
 from dataclasses import dataclass
 from itertools import product as cartesian_product
@@ -47,7 +47,7 @@ class DataSelection:
 
 
 class RegularGridData:
-    def __init__(self, grid_axes: List[GridAxis], grid_point_data_sets: List[GridPointData]) -> None:
+    def __init__(self, grid_axes: list[GridAxis], grid_point_data_sets: list[GridPointData]) -> None:
         self.grid_axes = grid_axes
         self.grid_point_data_sets = grid_point_data_sets
 
@@ -68,7 +68,7 @@ class RegularGridData:
 
         # TODO: Make interpolator
 
-    def get_grid_point_index(self, grid_indices: List[int] | tuple[int, ...]) -> int:
+    def get_grid_point_index(self, grid_indices: list[int] | tuple[int, ...]) -> int:
         index = 0
         for axis_index, point_index in enumerate(grid_indices):
             index += point_index * self.grid_axis_step_size[axis_index]
@@ -246,6 +246,6 @@ class RegularGridData:
         return plot
 
 
-def find_index_of_nearest_value(axis: List[SupportsFloat], value: SupportsFloat) -> Tuple[int, SupportsFloat]:
+def find_index_of_nearest_value(axis: list[SupportsFloat], value: SupportsFloat) -> tuple[int, SupportsFloat]:
     index = min(range(len(axis)), key=lambda i: abs(float(axis[i]) - float(value)))
     return index, axis[index]

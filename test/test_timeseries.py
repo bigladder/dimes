@@ -66,8 +66,13 @@ def test_multi_plot():
     plot = TimeSeriesPlot([1, 2, 3, 4, 5])
     # Time series & axis names explicit, subplot default to 1
     plot.add_time_series(
-        TimeSeriesData([x**2 for x in plot.time_values], name="Power", native_units="hp", display_units="W"),
-        axis_name="Power or Capacity",
+        TimeSeriesData(
+            [x**2 for x in plot.time_values],
+            name="Power",
+            native_units="hp",
+            display_units="W",
+            y_axis_name="Power or Capacity",
+        )
     )
     # Time series name explicit, axis automatically determined by dimensionality, subplot default to 1
     plot.add_time_series(
@@ -77,9 +82,8 @@ def test_multi_plot():
     plot.add_time_series(TimeSeriesData([x for x in plot.time_values], native_units="ft", display_units="cm"))
     # Time series & axis names and subplot number are all explicit
     plot.add_time_series(
-        TimeSeriesData([x**3 for x in plot.time_values], name="Number of Apples"),
+        TimeSeriesData([x**3 for x in plot.time_values], name="Number of Apples", y_axis_name="Quantity"),
         subplot_number=2,
-        axis_name="Quantity",
     )
     # Time series and subplot number explicit, axis name automatically determined from time series name
     plot.add_time_series(
