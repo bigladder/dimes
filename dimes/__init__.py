@@ -9,5 +9,4 @@ from .common import (
     DimensionalData,
     sample_colorscale,
 )
-from .timeseries import TimeSeriesPlot, TimeSeriesData
 from .griddeddata import GridAxis, GridPointData, RegularGridData, DataSelection
