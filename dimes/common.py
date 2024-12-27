@@ -132,6 +132,7 @@ class DisplayData(DimensionalData):
         legend_group: Union[str, None] = None,
         x_axis: Union[DimensionalData, TimeSeriesAxis, List[SupportsFloat], List[datetime], None] = None,
         y_axis_min: Union[SupportsFloat, None] = 0.0,
+        y_axis_name: str | None = None,
     ):
         super().__init__(data_values, name, native_units, display_units)
         self.x_axis: Union[DimensionalData, TimeSeriesAxis, None]
@@ -143,6 +144,7 @@ class DisplayData(DimensionalData):
         else:
             self.x_axis = x_axis
         self.y_axis_min = y_axis_min
+        self.y_axis_name = y_axis_name
         self.line_properties = line_properties
         self.is_visible = is_visible
         self.legend_group = legend_group
@@ -188,20 +190,23 @@ class DimensionalSubplot:
     def __init__(self) -> None:
         self.axes: List[DimensionalAxis] = []
 
-    def add_display_data(self, display_data: DisplayData, axis_name: Union[str, None] = None) -> None:
+    def add_display_data(self, display_data: DisplayData) -> None:
         """Add `DisplayData` to an axis"""
-        if axis_name is not None:
+        if display_data.y_axis_name is not None:
             # Add display data to existing axis of the same name if it exists
             for axis in self.axes:
-                if axis.name == axis_name:
+                if axis.name == display_data.y_axis_name:
                     self.add_display_data_to_existing_axis(display_data, axis)
                     return
+            # If axis name doesn't already exist, set name for new axis
+            axis_name = display_data.y_axis_name
         else:
             # Add display data to existing axis of the dimensionality if it exists
             for axis in self.axes:
                 if axis.dimensionality == display_data.dimensionality:
                     self.add_display_data_to_existing_axis(display_data, axis)
                     return
+            # If axis with similar dimensionality doesn't already exist, set name to be the same as the display name
             axis_name = display_data.name
 
         # Otherwise, make a new axis
@@ -239,7 +244,6 @@ class DimensionalPlot:
         self,
         display_data: DisplayData,
         subplot_number: Union[int, None] = None,
-        axis_name: Union[str, None] = None,
     ) -> None:
         """Add a DisplayData object to the plot."""
         # Assign x-axis if it's not already defined
@@ -249,11 +253,11 @@ class DimensionalPlot:
         if subplot_number is None:
             # If axis_name already exists in a subplot, add to that subplot
             subplot_number_set = False
-            if axis_name is not None:
+            if display_data.y_axis_name is not None:
                 for subplot_index, subplot in enumerate(self.subplots):
                     if subplot is not None:
                         for axis in subplot.axes:
-                            if axis.name == axis_name:
+                            if axis.name == display_data.y_axis_name:
                                 subplot_number = subplot_index + 1
                                 subplot_number_set = True
                                 break
@@ -293,7 +297,7 @@ class DimensionalPlot:
         subplot_index = subplot_number - 1
         if self.subplots[subplot_index] is None:
             self.subplots[subplot_index] = DimensionalSubplot()
-        self.subplots[subplot_index].add_display_data(display_data, axis_name)  # type: ignore[union-attr]
+        self.subplots[subplot_index].add_display_data(display_data)  # type: ignore[union-attr]
 
     def finalize_plot(self):
         """Once all DisplayData objects have been added, generate plot and subplots."""
@@ -314,7 +318,7 @@ class DimensionalPlot:
             }
             x_axis_label = f"{self.x_axis.name}"
             if isinstance(self.x_axis, DimensionalData):
-                x_axis_label += f" [{koozie.format_units(self.x_axis.display_units)}]"  # TODO: Use pretty format
+                x_axis_label += f" [{koozie.format_units(self.x_axis.display_units)}]"
             for subplot_index, subplot in enumerate(self.subplots):
                 subplot_number = subplot_index + 1
                 x_axis_id = subplot_number

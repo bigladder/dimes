@@ -626,11 +626,21 @@ def test_2d_data():
 
     grided_data_sets: list[GridPointData] = []
 
+    y_axis_units_map = {
+        "W": "Capacity / Power / Heat",
+        "m**3/s": "Volumetric Flow Rate",
+    }
+
     for variable_name, values in raw_data["lookup_variables"].items():
         if variable_name != "operation_state":
             schema_info = schema_data["lookup_variables"][variable_name]
             grided_data_sets.append(
-                GridPointData(values, name=schema_info["Display Name"], native_units=schema_info["Units"])
+                GridPointData(
+                    values,
+                    name=schema_info["Display Name"],
+                    native_units=schema_info["Units"],
+                    y_axis_name=y_axis_units_map[schema_info["Units"]],
+                )
             )
 
     cops = []
@@ -644,8 +654,8 @@ def test_2d_data():
         cops.append(cop)
         eirs.append(eir)
 
-    grided_data_sets.append(GridPointData(cops, name="COP", native_units=""))
-    grided_data_sets.append(GridPointData(eirs, name="Energy Input Ratio", native_units=""))
+    grided_data_sets.append(GridPointData(cops, name="COP", native_units="", y_axis_name="COP / EIR"))
+    grided_data_sets.append(GridPointData(eirs, name="Energy Input Ratio", native_units="", y_axis_name="COP / EIR"))
 
     gridded_data = RegularGridData(grid_axes, grided_data_sets)
     plot = gridded_data.make_plot(

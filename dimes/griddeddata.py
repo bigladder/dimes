@@ -40,7 +40,7 @@ class DataSelection:
     Class for selecting data to display in a chart
     """
 
-    # TODO: Add color and y-axis name and precision?
+    # TODO: Add color and precision?
 
     name: str
     units: str
@@ -225,8 +225,8 @@ class RegularGridData:
                             display_units=display_variable.units,
                             line_properties=LineProperties(color=line_color),
                             legend_group=f"{display_variable.name}",
-                        ),
-                        axis_name=display_variable.name,
+                            y_axis_name=grid_point_data_set.y_axis_name,
+                        )
                     )
         else:
             grid_point_indices = self.get_grid_point_indices(axis_indices=axis_indices)
@@ -239,6 +239,7 @@ class RegularGridData:
                         name=display_variable.name,
                         native_units=grid_point_data_set.native_units,
                         display_units=display_variable.units,
+                        y_axis_name=grid_point_data_set.y_axis_name,
                     )
                 )
 
