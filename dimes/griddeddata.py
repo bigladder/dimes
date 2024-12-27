@@ -86,26 +86,26 @@ class RegularGridData:
 
     def write_to_csv(self, output_path):
         grid_axes_indices = []
-        row = []
+        header_row = []
         for grid_axis in self.grid_axes:
             grid_axes_indices.append(list(range(len(list(grid_axis.data_values)))))
-            row.append(f"{grid_axis.name} [{format_units(grid_axis.display_units)}]")
+            header_row.append(f"{grid_axis.name} [{format_units(grid_axis.display_units)}]")
 
         for grid_point_data_set in self.grid_point_data_sets:
-            row.append(f"{grid_point_data_set.name} [{format_units(grid_point_data_set.display_units)}]")
+            header_row.append(f"{grid_point_data_set.name} [{format_units(grid_point_data_set.display_units)}]")
 
         with open(output_path, "w", encoding="UTF-8") as csv_object:
             writer_object = writer(csv_object)
-            writer_object.writerow(row)  # Header
+            writer_object.writerow(header_row)  # Header
 
             for combination in cartesian_product(*grid_axes_indices):
-                row = []
+                content_row = []
                 for i, grid_axis in enumerate(self.grid_axes):
-                    row.append(list(grid_axis.data_values)[combination[i]])
+                    content_row.append(list(grid_axis.data_values)[combination[i]])
                 combination_index = self.get_grid_point_index(combination)
                 for grid_point_data_set in self.grid_point_data_sets:
-                    row.append(list(grid_point_data_set.data_values)[combination_index])
-                writer_object.writerow(row)
+                    content_row.append(list(grid_point_data_set.data_values)[combination_index])
+                writer_object.writerow(content_row)
 
     def make_plot(
         self,
@@ -159,28 +159,34 @@ class RegularGridData:
             grid_point_data_set_indices.append(grid_point_data_set_names.index(display_variable.name))
 
         # All other axes are constrained
+        referenced_axis_names = constrained_grid_axis_names + [x_grid_axis.name]
+        if legend_grid_axis is not None:
+            referenced_axis_names += [legend_grid_axis.name]
+
         for grid_axis in self.grid_axes:
-            if grid_axis.name not in constrained_grid_axis_names + [x_grid_axis.name, legend_grid_axis.name]:
-                mid_index = len(grid_axis.data_values) // 2
+            if grid_axis.name not in referenced_axis_names:
+                grid_axis_values = list(grid_axis.data_values)
+                mid_index = len(grid_axis_values) // 2
                 constrained_grid_axes.append(
-                    (DataSelection(grid_axis.name, grid_axis.display_units), grid_axis.data_values[mid_index])
+                    (DataSelection(grid_axis.name, grid_axis.display_units), float(grid_axis_values[mid_index]))
                 )
         constrained_grid_axis_names = [axis[0].name for axis in constrained_grid_axes]
 
-        axis_indices = [None] * len(self.grid_axes)
-        x_axis_index = None
-        legend_axis_index = None
+        axis_indices: list[list[int]] = [[] for _ in range(len(self.grid_axes))]
+        x_axis_index: int | None = None
+        legend_axis_index: int | None = None
 
         title_text: list[str] = []
         for i, grid_axis in enumerate(self.grid_axes):
+            grid_axis_values = list(grid_axis.data_values)
             if grid_axis.name == x_grid_axis.name:
                 x_axis_index = i
-                axis_indices[i] = list(range(len(grid_axis.data_values)))
+                axis_indices[i] = list(range(len(grid_axis_values)))
                 grid_axis.set_display_units(x_grid_axis.units)
             if legend_grid_axis is not None:
                 if grid_axis.name == legend_grid_axis.name:
                     legend_axis_index = i
-                    axis_indices[i] = list(range(len(grid_axis.data_values)))
+                    axis_indices[i] = list(range(len(grid_axis_values)))
             if grid_axis.name in constrained_grid_axis_names:
                 for constrained_grid_axis in constrained_grid_axes:
                     selection = constrained_grid_axis[0]
@@ -191,10 +197,11 @@ class RegularGridData:
                             if selection.units == grid_axis.native_units
                             else convert(value, selection.units, grid_axis.native_units)
                         )
-                        axis_indices[i] = [find_index_of_nearest_value(grid_axis.data_values, matching_value)[0]]
+                        axis_indices[i] = [find_index_of_nearest_value(grid_axis_values, matching_value)[0]]
                         title_text.append(f"{selection.name} = {matching_value:.2f} [{format_units(selection.units)}]")
 
         # Create plot
+        assert x_axis_index is not None
         plot = DimensionalPlot(self.grid_axes[x_axis_index], title="<br>".join(title_text))
 
         if legend_grid_axis is not None:
@@ -202,18 +209,20 @@ class RegularGridData:
             assert legend_axis_index is not None
             grid_axis = self.grid_axes[legend_axis_index]
             legend_axis_indices = axis_indices[legend_axis_index]
-            grid_axis_min = grid_axis.data_values[legend_axis_indices[0]]
-            grid_axis_max = grid_axis.data_values[legend_axis_indices[-1]]
+            grid_axis_values = list(grid_axis.data_values)
+            grid_axis_min = float(grid_axis_values[legend_axis_indices[0]])
+            grid_axis_max = float(grid_axis_values[legend_axis_indices[-1]])
             color_scale_cycler = cycle(COLOR_SCALE_SEQUENCE)
             for grid_data_index, display_variable in enumerate(display_data):
                 grid_point_data_set = self.grid_point_data_sets[grid_point_data_set_indices[grid_data_index]]
+                grid_point_values = list(grid_point_data_set.data_values)
                 color_scale = next(color_scale_cycler)
                 for index in legend_axis_indices:
                     plot_axis_indices = deepcopy(axis_indices)
                     plot_axis_indices[legend_axis_index] = [index]
                     grid_point_indices = self.get_grid_point_indices(axis_indices=plot_axis_indices)
-                    data_values = [grid_point_data_set.data_values[i] for i in grid_point_indices]
-                    grid_axis_value = grid_axis.data_values[index]
+                    data_values = [grid_point_values[i] for i in grid_point_indices]
+                    grid_axis_value = float(grid_axis_values[index])
                     grid_axis_ratio = (grid_axis_max - grid_axis_value) / (grid_axis_max - grid_axis_min)
                     line_color = get_color_from_scale(color_scale, grid_axis_ratio)
                     legend_axis_value = convert(grid_axis_value, grid_axis.native_units, legend_grid_axis.units)
@@ -232,7 +241,8 @@ class RegularGridData:
             grid_point_indices = self.get_grid_point_indices(axis_indices=axis_indices)
             for grid_data_index, display_variable in enumerate(display_data):
                 grid_point_data_set = self.grid_point_data_sets[grid_point_data_set_indices[grid_data_index]]
-                data_values = [grid_point_data_set.data_values[i] for i in grid_point_indices]
+                grid_point_values = list(grid_point_data_set.data_values)
+                data_values = [grid_point_values[i] for i in grid_point_indices]
                 plot.add_display_data(
                     DisplayData(
                         data_values,

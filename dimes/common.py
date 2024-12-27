@@ -8,9 +8,9 @@ import math
 import bisect
 
 from plotly.graph_objects import Figure, Scatter  # type: ignore
+from plotly.colors import sample_colorscale
 
 import koozie
-from plotly.colors import sample_colorscale
 
 
 WHITE = "white"
