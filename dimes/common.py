@@ -142,7 +142,7 @@ class DimensionalAxis:
 
     def get_axis_label(self) -> str:
         """Make the string that appears as the axis label"""
-        return f"{self.name} [{self.units}]"
+        return f"{self.name} [{koozie.format_units(self.units)}]"
 
     @staticmethod
     def get_axis_range(value_min, value_max):
@@ -258,7 +258,7 @@ class DimensionalPlot:
             }
             x_axis_label = f"{self.x_axis.name}"
             if isinstance(self.x_axis, DimensionalData):
-                x_axis_label += f" [{self.x_axis.display_units}]"  # TODO: Use pretty format
+                x_axis_label += f" [{koozie.format_units(self.x_axis.display_units)}]"  # TODO: Use pretty format
             for subplot_index, subplot in enumerate(self.subplots):
                 subplot_number = subplot_index + 1
                 x_axis_id = subplot_number

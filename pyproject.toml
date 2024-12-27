@@ -9,9 +9,9 @@ keywords = ["template"]
 repository = "https://github.com/bigladder/dimes"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 plotly = "*"
-koozie = "^1.2.3"
+koozie = {git = "https://github.com/bigladder/koozie.git", branch = "add-units-formatting"}# "^1.2.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.3"

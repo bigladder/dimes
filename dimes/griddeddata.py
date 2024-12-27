@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from itertools import product as cartesian_product
 from csv import writer
 
-from koozie import convert
+from koozie import convert, format_units
 
 from .common import DimensionalData, DisplayData, DimensionalPlot
 
@@ -79,11 +79,11 @@ class RegularGridData:
         grid_axes_indices = []
         row = []
         for grid_axis in self.grid_axes:
-            grid_axes_indices.append(list(range(len(grid_axis.data_values))))
-            row.append(f"{grid_axis.name} [{grid_axis.display_units}]")
+            grid_axes_indices.append(list(range(len(list(grid_axis.data_values)))))
+            row.append(f"{grid_axis.name} [{format_units(grid_axis.display_units)}]")
 
         for grid_point_data_set in self.grid_point_data_sets:
-            row.append(f"{grid_point_data_set.name} [{grid_point_data_set.display_units}]")
+            row.append(f"{grid_point_data_set.name} [{format_units(grid_point_data_set.display_units)}]")
 
         with open(output_path, "w", encoding="UTF-8") as csv_object:
             writer_object = writer(csv_object)
@@ -183,7 +183,7 @@ class RegularGridData:
                             else convert(value, selection.units, grid_axis.native_units)
                         )
                         axis_indices[i] = [find_index_of_nearest_value(grid_axis.data_values, matching_value)[0]]
-                        title_text.append(f"{selection.name} = {matching_value:.2f} [{selection.units}]")
+                        title_text.append(f"{selection.name} = {matching_value:.2f} [{format_units(selection.units)}]")
 
         # Create plot
         plot = DimensionalPlot(self.grid_axes[x_axis_index], title="<br>".join(title_text))
@@ -204,7 +204,7 @@ class RegularGridData:
                     plot.add_display_data(
                         DisplayData(
                             data_values,
-                            name=f"{legend_grid_axis.name} = {legend_axis_value:.1f} [{legend_grid_axis.units}]",
+                            name=f"{legend_grid_axis.name} = {legend_axis_value:.1f} [{format_units(legend_grid_axis.units)}]",
                             native_units=grid_point_data_set.native_units,
                             display_units=display_variable.units,
                             legend_group=f"{display_variable.name}",
