@@ -247,12 +247,49 @@ class DimensionalPlot:
             display_data.x_axis = self.x_axis
 
         if subplot_number is None:
-            # Default case
-            subplot_number = len(self.subplots)
-        else:
-            if subplot_number > len(self.subplots):
-                # Make enough empty subplots
-                self.subplots += [None] * (subplot_number - len(self.subplots))
+            # If axis_name already exists in a subplot, add to that subplot
+            subplot_number_set = False
+            if axis_name is not None:
+                for subplot_index, subplot in enumerate(self.subplots):
+                    if subplot is not None:
+                        for axis in subplot.axes:
+                            if axis.name == axis_name:
+                                subplot_number = subplot_index + 1
+                                subplot_number_set = True
+                                break
+                    if subplot_number_set:
+                        break
+
+            # If current subplot doesn't already have two axes, add it there
+            if not subplot_number_set:
+
+                current_subplot = self.subplots[-1]
+                if current_subplot is not None:
+                    if len(current_subplot.axes) < 2:
+                        subplot_number = len(self.subplots)
+                        subplot_number_set = True
+
+            if not subplot_number_set:
+                # Otherwise, add a new subplot in the first available subplot
+                for subplot_index, subplot in enumerate(self.subplots):
+                    if subplot is None:
+                        subplot_number = subplot_index + 1
+                        subplot_number_set = True
+                        break
+                    else:
+                        if len(subplot.axes) < 2:
+                            subplot_number = subplot_index + 1
+                            subplot_number_set = True
+                            break
+
+            if not subplot_number_set:
+                # If no subplot is available, add a new subplot
+                subplot_number = len(self.subplots) + 1
+
+        assert subplot_number is not None
+        if subplot_number > len(self.subplots):
+            # Make enough empty subplots
+            self.subplots += [None] * (subplot_number - len(self.subplots))
         subplot_index = subplot_number - 1
         if self.subplots[subplot_index] is None:
             self.subplots[subplot_index] = DimensionalSubplot()
