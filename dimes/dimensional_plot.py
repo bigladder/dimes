@@ -318,6 +318,7 @@ class DimensionalPlot:
         if not self.is_finalized:
             grid_line_width = 1.5
             at_least_one_subplot = False
+            uses_second_y_axis = False
             number_of_subplots = len(self.subplots)
             subplot_domains = get_subplot_domains(number_of_subplots)
             absolute_axis_index = 0  # Used to track axes data in the plot
@@ -420,6 +421,8 @@ class DimensionalPlot:
                             "gridwidth": grid_line_width,
                             "range": axis.get_axis_range(axis.range_min, axis.range_max),
                         }
+                        if y_axis_side == "right":
+                            uses_second_y_axis = True
                         self.figure.layout[f"yaxis{y_axis_id}"].update(xy_common_axis_format)
                         absolute_axis_index += 1
                         y_axis_side = "right" if y_axis_side == "left" else "left"
@@ -438,6 +441,11 @@ class DimensionalPlot:
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
+            if uses_second_y_axis:
+                self.figure.layout["legend"] = {
+                    "x": 1.05,
+                    "y": 1.0,
+                }
             if not at_least_one_subplot:
                 raise RuntimeError("No display data provided.")
 
