@@ -226,6 +226,7 @@ class DimensionalPlot:
         self,
         x_axis: DimensionalData | TimeSeriesAxis | list[SupportsFloat] | list[datetime],
         title: str | None = None,
+        additional_info: str | None = None,
     ):
         self.figure = Figure()
         self.x_axis: DimensionalData | TimeSeriesAxis
@@ -239,6 +240,19 @@ class DimensionalPlot:
         self.subplots: list[DimensionalSubplot | None] = [None]
         self.is_finalized = False
         self.figure.layout["title"] = title
+        if additional_info is not None:
+            self.figure.add_trace(
+                Scatter(
+                    x=[None],  # No data points
+                    y=[None],  # No data points
+                    mode="markers",
+                    marker={"opacity": 0.0, "color": WHITE},  # Make the marker invisible
+                    showlegend=True,
+                    name=additional_info,
+                    legendgroup="Constrained Dimensions",
+                    legendgrouptitle={"text": "Constrained Dimensions"},
+                )
+            )
 
     def add_display_data(
         self,
