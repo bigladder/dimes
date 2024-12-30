@@ -626,20 +626,22 @@ def test_2d_data():
 
     grided_data_sets: list[GridPointData] = []
 
-    y_axis_units_map = {
-        "W": "Capacity / Power / Heat",
-        "m**3/s": "Volumetric Flow Rate",
-    }
-
     for variable_name, values in raw_data["lookup_variables"].items():
         if variable_name != "operation_state":
             schema_info = schema_data["lookup_variables"][variable_name]
+            y_axis_name = schema_info["Display Name"]
+            if "Capacity" in y_axis_name:
+                y_axis_name = "Capacity"
+
+            if "Heat" in y_axis_name:
+                y_axis_name = "Heat"
+
             grided_data_sets.append(
                 GridPointData(
                     values,
                     name=schema_info["Display Name"],
                     native_units=schema_info["Units"],
-                    y_axis_name=y_axis_units_map[schema_info["Units"]],
+                    y_axis_name=y_axis_name,
                 )
             )
 
@@ -654,8 +656,8 @@ def test_2d_data():
         cops.append(cop)
         eirs.append(eir)
 
-    grided_data_sets.append(GridPointData(cops, name="COP", native_units="", y_axis_name="COP / EIR"))
-    grided_data_sets.append(GridPointData(eirs, name="Energy Input Ratio", native_units="", y_axis_name="COP / EIR"))
+    grided_data_sets.append(GridPointData(cops, name="COP", native_units="", y_axis_name="COP"))
+    grided_data_sets.append(GridPointData(eirs, name="Energy Input Ratio", native_units="", y_axis_name="EIR"))
 
     gridded_data = RegularGridData(grid_axes, grided_data_sets)
 
@@ -683,8 +685,7 @@ def test_2d_data():
         AxisConstraint(data_selections["Evaporator Liquid Volumetric Flow Rate"]),
     ]
 
-    constrained_axis = AxisConstraint(data_selections["Compressor Sequence Number"], 4)
-    constrained_grid_axes = [constrained_axis] + axis_constraints
+    constrained_grid_axes = [AxisConstraint(data_selections["Compressor Sequence Number"], 4)] + axis_constraints
 
     plot = gridded_data.make_plot(
         x_grid_axis=data_selections["Condenser Air Entering Drybulb Temperature"],
@@ -712,7 +713,7 @@ def test_2d_data():
         x_grid_axis=data_selections["Condenser Air Entering Drybulb Temperature"],
         display_data=display_data,
         legend_grid_axis=data_selections["Compressor Sequence Number"],
-        constrained_grid_axes=constrained_grid_axes + axis_constraints,
+        constrained_grid_axes=constrained_grid_axes,
     )
 
     plot3.write_html_plot(Path(TESTING_DIRECTORY, "chiller-fTE-fSpeed.html"))
