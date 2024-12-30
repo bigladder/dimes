@@ -44,6 +44,17 @@ class DataSelection:
 
     name: str
     units: str
+    precision: int = 2
+
+
+@dataclass
+class AxisConstraint:
+    """
+    Class for constraining an axis in a chart
+    """
+
+    selection: DataSelection
+    value: float = 0.0  # Allow default for axis with one value
 
 
 class RegularGridData:
@@ -114,14 +125,14 @@ class RegularGridData:
             list[DataSelection] | DataSelection | None
         ) = None,  # What grid point data to plot. Use None to plot all grid point data.
         legend_grid_axis: DataSelection | None = None,  # Name of grid axis to use in the legend of the plot
-        constrained_grid_axes: list[tuple[DataSelection, float]] | None = None,  # Constraints on axis not plotted
+        constrained_grid_axes: list[AxisConstraint] | None = None,  # Constraints on axis not plotted
     ) -> DimensionalPlot:
 
         constrained_grid_axis_names: list[str] = []
 
         if constrained_grid_axes is None:
             constrained_grid_axes = []
-        constrained_grid_axis_names = [axis[0].name for axis in constrained_grid_axes]
+        constrained_grid_axis_names = [axis.selection.name for axis in constrained_grid_axes]
         assert constrained_grid_axes is not None
         grid_axis_names = [axis.name for axis in self.grid_axes]
         grid_point_data_set_names = [data_set.name for data_set in self.grid_point_data_sets]
@@ -166,43 +177,49 @@ class RegularGridData:
         for grid_axis in self.grid_axes:
             if grid_axis.name not in referenced_axis_names:
                 grid_axis_values = list(grid_axis.data_values)
-                mid_index = len(grid_axis_values) // 2
+                mid_index = (len(grid_axis_values) - 1) // 2
+                grid_axis_value = float(grid_axis_values[mid_index])
                 constrained_grid_axes.append(
-                    (DataSelection(grid_axis.name, grid_axis.display_units), float(grid_axis_values[mid_index]))
+                    AxisConstraint(DataSelection(grid_axis.name, grid_axis.display_units), grid_axis_value)
                 )
-        constrained_grid_axis_names = [axis[0].name for axis in constrained_grid_axes]
+        constrained_grid_axis_names = [axis.selection.name for axis in constrained_grid_axes]
 
         axis_indices: list[list[int]] = [[] for _ in range(len(self.grid_axes))]
-        x_axis_index: int | None = None
         legend_axis_index: int | None = None
+        x_axis: GridAxis | None = None
 
-        title_text: list[str] = []
+        constraints_text: list[str] = []
         for i, grid_axis in enumerate(self.grid_axes):
             grid_axis_values = list(grid_axis.data_values)
             if grid_axis.name == x_grid_axis.name:
-                x_axis_index = i
                 axis_indices[i] = list(range(len(grid_axis_values)))
-                grid_axis.set_display_units(x_grid_axis.units)
+                x_axis = deepcopy(grid_axis)
+                x_axis.set_display_units(x_grid_axis.units)
             if legend_grid_axis is not None:
                 if grid_axis.name == legend_grid_axis.name:
                     legend_axis_index = i
                     axis_indices[i] = list(range(len(grid_axis_values)))
             if grid_axis.name in constrained_grid_axis_names:
                 for constrained_grid_axis in constrained_grid_axes:
-                    selection = constrained_grid_axis[0]
-                    value = constrained_grid_axis[1]
+                    selection = constrained_grid_axis.selection
+                    value = constrained_grid_axis.value
                     if grid_axis.name == selection.name:
                         matching_value = (
                             value
                             if selection.units == grid_axis.native_units
                             else convert(value, selection.units, grid_axis.native_units)
                         )
-                        axis_indices[i] = [find_index_of_nearest_value(grid_axis_values, matching_value)[0]]
-                        title_text.append(f"{selection.name} = {matching_value:.2f} [{format_units(selection.units)}]")
+                        matched_index, matched_value = find_index_of_nearest_value(grid_axis_values, matching_value)
+                        axis_indices[i] = [matched_index]
+                        if selection.units != grid_axis.native_units:
+                            matched_value = convert(matched_value, grid_axis.native_units, selection.units)
+                        constraints_text.append(
+                            f"{selection.name} = {matched_value:.{selection.precision}f} [{format_units(selection.units)}]"
+                        )
 
         # Create plot
-        assert x_axis_index is not None
-        plot = DimensionalPlot(self.grid_axes[x_axis_index], title="<br>".join(title_text))
+        assert x_axis is not None
+        plot = DimensionalPlot(x_axis, additional_info="<br>".join(constraints_text))
 
         if legend_grid_axis is not None:
             # Loop over legend axis values and add display data for each
@@ -229,7 +246,7 @@ class RegularGridData:
                     plot.add_display_data(
                         DisplayData(
                             data_values,
-                            name=f"{legend_grid_axis.name} = {legend_axis_value:.1f} [{format_units(legend_grid_axis.units)}]",
+                            name=f"{legend_grid_axis.name} = {legend_axis_value:.{legend_grid_axis.precision}f} [{format_units(legend_grid_axis.units)}]",
                             native_units=grid_point_data_set.native_units,
                             display_units=display_variable.units,
                             line_properties=LineProperties(color=line_color),

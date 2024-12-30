@@ -658,13 +658,63 @@ def test_2d_data():
     grided_data_sets.append(GridPointData(eirs, name="Energy Input Ratio", native_units="", y_axis_name="COP / EIR"))
 
     gridded_data = RegularGridData(grid_axes, grided_data_sets)
+
+    data_selections = {
+        "Condenser Air Entering Drybulb Temperature": DataSelection(
+            "Condenser Air Entering Drybulb Temperature", "degF", 1
+        ),
+        "Evaporator Liquid Leaving Temperature": DataSelection("Evaporator Liquid Leaving Temperature", "degF", 1),
+        "Evaporator Liquid Volumetric Flow Rate": DataSelection("Evaporator Liquid Volumetric Flow Rate", "gpm", 1),
+        "Ambient Pressure": DataSelection("Ambient Pressure", "atm", 1),
+        "Condenser Air Entering Relative Humidity": DataSelection("Condenser Air Entering Relative Humidity", "%", 1),
+        "Compressor Sequence Number": DataSelection("Compressor Sequence Number", "", 0),
+    }
+
+    display_data = [
+        DataSelection("Net Evaporator Capacity", "ton_ref"),
+        DataSelection("Net Condenser Capacity", "ton_ref"),
+        DataSelection("Input Power", "kW"),
+        DataSelection("COP", ""),
+    ]
+
+    axis_constraints = [
+        AxisConstraint(data_selections["Ambient Pressure"]),
+        AxisConstraint(data_selections["Condenser Air Entering Relative Humidity"]),
+        AxisConstraint(data_selections["Evaporator Liquid Volumetric Flow Rate"]),
+    ]
+
+    constrained_axis = AxisConstraint(data_selections["Compressor Sequence Number"], 4)
+    constrained_grid_axes = [constrained_axis] + axis_constraints
+
     plot = gridded_data.make_plot(
-        x_grid_axis=DataSelection("Condenser Air Entering Drybulb Temperature", "degF"),
-        # display_data=DataSelection("Net Evaporator Capacity", "W"),
-        legend_grid_axis=DataSelection("Evaporator Liquid Leaving Temperature", "degF"),
-        constrained_grid_axes=[(DataSelection("Compressor Sequence Number", ""), 1)],
+        x_grid_axis=data_selections["Condenser Air Entering Drybulb Temperature"],
+        display_data=display_data,
+        legend_grid_axis=data_selections["Evaporator Liquid Leaving Temperature"],
+        constrained_grid_axes=constrained_grid_axes,
     )
 
-    plot.write_html_plot(Path(TESTING_DIRECTORY, "capacity.html"))
+    plot.write_html_plot(Path(TESTING_DIRECTORY, "chiller-fTC-fTE.html"))
+
+    plot2 = gridded_data.make_plot(
+        x_grid_axis=data_selections["Evaporator Liquid Leaving Temperature"],
+        display_data=display_data,
+        legend_grid_axis=data_selections["Condenser Air Entering Drybulb Temperature"],
+        constrained_grid_axes=constrained_grid_axes,
+    )
+
+    plot2.write_html_plot(Path(TESTING_DIRECTORY, "chiller-fTE-fTC.html"))
+
+    constrained_grid_axes = [
+        AxisConstraint(data_selections["Evaporator Liquid Leaving Temperature"], 55.0)
+    ] + axis_constraints
+
+    plot3 = gridded_data.make_plot(
+        x_grid_axis=data_selections["Condenser Air Entering Drybulb Temperature"],
+        display_data=display_data,
+        legend_grid_axis=data_selections["Compressor Sequence Number"],
+        constrained_grid_axes=constrained_grid_axes + axis_constraints,
+    )
+
+    plot3.write_html_plot(Path(TESTING_DIRECTORY, "chiller-fTE-fSpeed.html"))
 
     gridded_data.write_to_csv(Path(TESTING_DIRECTORY, "grid-test.csv"))
