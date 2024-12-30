@@ -2,8 +2,9 @@
 
 from pathlib import Path
 import pytest
-from dimes import LineProperties, LinesOnly, DimensionalPlot, DimensionalData, DisplayData
-from dimes.common import DimensionalAxis
+from dimes import LineProperties, LinesOnly, DimensionalPlot, DisplayData
+
+from dimes.dimensional_plot import DimensionalAxis
 
 TESTING_DIRECTORY = Path("test_outputs")
 TESTING_DIRECTORY.mkdir(exist_ok=True)

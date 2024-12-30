@@ -10,7 +10,7 @@ from copy import deepcopy
 
 from koozie import convert, format_units
 
-from .common import (
+from .dimensional_plot import (
     DimensionalData,
     DisplayData,
     DimensionalPlot,

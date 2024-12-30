@@ -1,12 +1,11 @@
 """dimes public interface"""
 
-from .common import (
+from .dimensional_plot import (
     LineProperties,
     MarkersOnly,
     LinesOnly,
     DimensionalPlot,
     DisplayData,
     DimensionalData,
-    sample_colorscale,
+    get_color_from_scale,
 )
-from .griddeddata import GridAxis, GridPointData, RegularGridData, DataSelection

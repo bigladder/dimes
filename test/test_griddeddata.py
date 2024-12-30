@@ -1,14 +1,14 @@
 # pylint:disable=C0114
 
 from pathlib import Path
-from dimes import GridAxis, GridPointData, RegularGridData, DataSelection
+from dimes.griddeddata import GridAxis, GridPointData, RegularGridData, DataSelection, AxisConstraint
 
 TESTING_DIRECTORY = Path("test_outputs")
 TESTING_DIRECTORY.mkdir(exist_ok=True)
 
 
 def test_2d_data():
-    raw_data = {
+    raw_data: dict[str, dict[str, list[float]]] = {
         "grid_variables": {
             "evaporator_liquid_volumetric_flow_rate": [0.01130153653374901],
             "evaporator_liquid_leaving_temperature": [
@@ -559,7 +559,7 @@ def test_2d_data():
         },
     }
 
-    schema_data = {
+    schema_data: dict[str, dict[str, dict[str, str]]] = {
         "grid_variables": {
             "evaporator_liquid_volumetric_flow_rate": {
                 "Units": "m**3/s",
@@ -645,7 +645,7 @@ def test_2d_data():
 
     cops = []
     eirs = []
-    for index in range(len(grided_data_sets[0].data_values)):
+    for index in range(len(list(grided_data_sets[0].data_values))):
         cop = (
             raw_data["lookup_variables"]["net_evaporator_capacity"][index]
             / raw_data["lookup_variables"]["input_power"][index]
