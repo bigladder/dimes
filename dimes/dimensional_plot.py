@@ -326,10 +326,10 @@ class DimensionalPlot:
             self.figure.layout["plot_bgcolor"] = WHITE
             self.figure.layout["font_color"] = BLACK
             self.figure.layout["title_x"] = 0.5
-            if width is not None:
-                self.figure.layout["width"] = width
-            if height is not None:
-                self.figure.layout["height"] = height
+            # if width is not None:
+            self.figure.layout.update({"width": width})
+            # if height is not None:
+            self.figure.layout.update({"height": height})
             xy_common_axis_format = {
                 "mirror": True,
                 "linecolor": BLACK,
