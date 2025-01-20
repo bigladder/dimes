@@ -325,6 +325,10 @@ class DimensionalPlot:
             self.figure.layout["plot_bgcolor"] = WHITE
             self.figure.layout["font_color"] = BLACK
             self.figure.layout["title_x"] = 0.5
+            if width is not None:
+                self.figure.layout["width"] = width
+            if height is not None:
+                self.figure.layout["height"] = height
             xy_common_axis_format = {
                 "mirror": True,
                 "linecolor": BLACK,
@@ -458,7 +462,7 @@ class DimensionalPlot:
 
     def write_image_plot(self, path: Path, width: int, height: int, scale: int) -> None:
         "Write plots to html file at specified path."
-        self.finalize_plot()
+        self.finalize_plot(width, height)
         self.figure.write_image(path, scale=scale)
 
 
