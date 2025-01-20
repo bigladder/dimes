@@ -242,11 +242,13 @@ class DimensionalPlot:
             self.x_axis = x_axis
         self.subplots: list[DimensionalSubplot | None] = [None]
         self.is_finalized = False
+        print(self.figure)
+        print(self.figure.layout)
         self.figure.layout["title"] = title
         print(self.figure)
         print(self.figure.layout)
-        self.figure.layout["width"] = width
-        self.figure.layout["height"] = height
+        self.figure.layout.update({"width":width})
+        self.figure.layout.update({"height":height})
         print(self.figure)
         print(self.figure.layout)
         if additional_info is not None:
