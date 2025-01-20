@@ -467,6 +467,7 @@ class DimensionalPlot:
         "Write plots to html file at specified path."
         self.finalize_plot(width=width, height=height)
         self.figure.write_image(path, scale=scale)
+        print(self.figure)
 
 
 def get_subplot_domains(number_of_subplots: int, gap: float = 0.05) -> list[tuple[float, float]]:
