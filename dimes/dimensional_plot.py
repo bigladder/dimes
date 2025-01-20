@@ -313,7 +313,7 @@ class DimensionalPlot:
             self.subplots[subplot_index] = DimensionalSubplot()
         self.subplots[subplot_index].add_display_data(display_data)  # type: ignore[union-attr]
 
-    def finalize_plot(self):
+    def finalize_plot(self, width=None, height=None):
         """Once all DisplayData objects have been added, generate plot and subplots."""
         if not self.is_finalized:
             grid_line_width = 1.5
@@ -455,6 +455,11 @@ class DimensionalPlot:
         "Write plots to html file at specified path."
         self.finalize_plot()
         self.figure.write_html(path)
+
+    def write_image_plot(self, path: Path, width: int, height: int, scale: int) -> None:
+        "Write plots to html file at specified path."
+        self.finalize_plot()
+        self.figure.write_image(path, scale=scale)
 
 
 def get_subplot_domains(number_of_subplots: int, gap: float = 0.05) -> list[tuple[float, float]]:
