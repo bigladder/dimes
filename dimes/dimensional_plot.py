@@ -6,6 +6,7 @@ import warnings
 from datetime import datetime
 import math
 import bisect
+from typing import Union
 
 from plotly.graph_objects import Figure, Scatter  # type: ignore
 from plotly.colors import sample_colorscale
@@ -460,7 +461,7 @@ class DimensionalPlot:
         self.finalize_plot()
         self.figure.write_html(path)
 
-    def write_image_plot(self, path: Path, width: int, height: int, scale: int) -> None:
+    def write_image_plot(self, path: Path, width: Union[int, None], height: Union[int, None], scale: int) -> None:
         "Write plots to html file at specified path."
         self.finalize_plot(width=width, height=height)
         self.figure.write_image(path, scale=scale)
