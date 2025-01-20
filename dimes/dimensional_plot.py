@@ -228,6 +228,8 @@ class DimensionalPlot:
         x_axis: DimensionalData | TimeSeriesAxis | list[SupportsFloat] | list[datetime],
         title: str | None = None,
         additional_info: str | None = None,
+        width: int | None = None,
+        height: int | None = None,
     ):
         self.figure = Figure()
         self.x_axis: DimensionalData | TimeSeriesAxis
@@ -241,6 +243,12 @@ class DimensionalPlot:
         self.subplots: list[DimensionalSubplot | None] = [None]
         self.is_finalized = False
         self.figure.layout["title"] = title
+        print(self.figure)
+        print(self.figure.layout)
+        self.figure.layout["width"] = width
+        self.figure.layout["height"] = height
+        print(self.figure)
+        print(self.figure.layout)
         if additional_info is not None:
             self.figure.add_trace(
                 Scatter(
@@ -314,7 +322,7 @@ class DimensionalPlot:
             self.subplots[subplot_index] = DimensionalSubplot()
         self.subplots[subplot_index].add_display_data(display_data)  # type: ignore[union-attr]
 
-    def finalize_plot(self, width=None, height=None):
+    def finalize_plot(self):
         """Once all DisplayData objects have been added, generate plot and subplots."""
         if not self.is_finalized:
             grid_line_width = 1.5
@@ -326,11 +334,6 @@ class DimensionalPlot:
             self.figure.layout["plot_bgcolor"] = WHITE
             self.figure.layout["font_color"] = BLACK
             self.figure.layout["title_x"] = 0.5
-            # if width is not None:
-            # self.figure.layout.update({"width": width})
-            # if height is not None:
-            # self.figure.layout.update({"height": height})
-            self.figure.layout.update({"width": 720, "height": 1280})
             xy_common_axis_format = {
                 "mirror": True,
                 "linecolor": BLACK,
@@ -462,11 +465,9 @@ class DimensionalPlot:
         self.finalize_plot()
         self.figure.write_html(path)
 
-    def write_image_plot(
-        self, path: Path, scale: int, width: Union[int, None] = None, height: Union[int, None] = None
-    ) -> None:
+    def write_image_plot(self, path: Path, scale: int) -> None:
         "Write plots to html file at specified path."
-        self.finalize_plot(width=width, height=height)
+        self.finalize_plot()
         self.figure.write_image(path, scale=scale)
         print(self.figure)
 
