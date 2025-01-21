@@ -6,7 +6,6 @@ import warnings
 from datetime import datetime
 import math
 import bisect
-from typing import Union
 
 from plotly.graph_objects import Figure, Scatter  # type: ignore
 from plotly.colors import sample_colorscale
