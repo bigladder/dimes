@@ -9,7 +9,7 @@ repository = "https://github.com/bigladder/dimes"
 version = "0.0.0" # Generated from git on CI
 
 [tool.poetry.dependencies]
-kaleido = "==0.2.1"
+kaleido = "==0.2.1" # Required by plotly to save figures as images
 koozie = "^1.3.0"
 plotly = "*"
 python = "^3.10"
