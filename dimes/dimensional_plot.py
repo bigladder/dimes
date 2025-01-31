@@ -460,8 +460,14 @@ class DimensionalPlot:
         self.finalize_plot()
         self.figure.write_html(path)
 
-    def write_image_plot(self, path: Path, scale: int | None = None) -> None:
-        "Write plots to html file at specified path."
+    def write_image_plot(self, path: Path, scale: int | float | None = None) -> None:
+        """
+        Write plots to html file at specified path.
+        scale (int, float, None): Adjusts the resolution of the output image.
+        A value cannot be equal to or less than 0 or greater than 16.
+        """
+        if (scale > 16) | (scale <= 0):
+            raise ValueError(f"Scale value {scale} cannot be greater than 16 or less than or equal to 0.")
         self.finalize_plot()
         self.figure.write_image(path, scale=scale)
 
