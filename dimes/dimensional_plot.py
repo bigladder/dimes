@@ -453,8 +453,26 @@ class DimensionalPlot:
 
     def write_html_plot(self, path: Path) -> None:
         "Write plots to html file at specified path."
+        self.figure.layout["width"] = None
+        self.figure.layout["height"] = None
         self.finalize_plot()
         self.figure.write_html(path)
+
+    def write_image_plot(
+        self, path: Path, width: int | None = None, height: int | None = None, scale: int | float | None = None
+    ) -> None:
+        """
+        Write plots to html file at specified path.
+        scale (int, float, None): Adjusts the resolution of the output image.
+        A value cannot be equal to or less than 0 or greater than 16.
+        """
+        if scale is not None:
+            if (scale > 16) | (scale <= 0):
+                raise ValueError(f"Scale value {scale} cannot be greater than 16 or less than or equal to 0.")
+        self.figure.layout["width"] = width
+        self.figure.layout["height"] = height
+        self.finalize_plot()
+        self.figure.write_image(path, scale=scale)
 
 
 def get_subplot_domains(number_of_subplots: int, gap: float = 0.05) -> list[tuple[float, float]]:
