@@ -453,6 +453,8 @@ class DimensionalPlot:
 
     def write_html_plot(self, path: Path) -> None:
         "Write plots to html file at specified path."
+        self.figure.layout["width"] = None
+        self.figure.layout["height"] = None
         self.finalize_plot()
         self.figure.write_html(path)
 
