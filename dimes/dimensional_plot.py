@@ -227,8 +227,6 @@ class DimensionalPlot:
         x_axis: DimensionalData | TimeSeriesAxis | list[SupportsFloat] | list[datetime],
         title: str | None = None,
         additional_info: str | None = None,
-        width: int | None = None,
-        height: int | None = None,
     ):
         self.figure = Figure()
         self.x_axis: DimensionalData | TimeSeriesAxis
@@ -242,8 +240,6 @@ class DimensionalPlot:
         self.subplots: list[DimensionalSubplot | None] = [None]
         self.is_finalized = False
         self.figure.layout["title"] = title
-        self.figure.layout["width"] = width
-        self.figure.layout["height"] = height
         if additional_info is not None:
             self.figure.add_trace(
                 Scatter(
@@ -460,14 +456,19 @@ class DimensionalPlot:
         self.finalize_plot()
         self.figure.write_html(path)
 
-    def write_image_plot(self, path: Path, scale: int | float | None = None) -> None:
+    def write_image_plot(
+        self, path: Path, width: int | None = None, height: int | None = None, scale: int | float | None = None
+    ) -> None:
         """
         Write plots to html file at specified path.
         scale (int, float, None): Adjusts the resolution of the output image.
         A value cannot be equal to or less than 0 or greater than 16.
         """
-        if (scale > 16) | (scale <= 0):
-            raise ValueError(f"Scale value {scale} cannot be greater than 16 or less than or equal to 0.")
+        if scale is not None:
+            if (scale > 16) | (scale <= 0):
+                raise ValueError(f"Scale value {scale} cannot be greater than 16 or less than or equal to 0.")
+        self.figure.layout["width"] = width
+        self.figure.layout["height"] = height
         self.finalize_plot()
         self.figure.write_image(path, scale=scale)
 
