@@ -81,6 +81,12 @@ class LinesOnly(LineProperties):
     marker_size: SupportsFloat | None = 0
 
 
+def add_units(units: str) -> str:
+    if len(units) > 0:
+        return f" [{koozie.format_units(units)}]"
+    return ""
+
+
 class DimensionalData:
     def __init__(
         self,
@@ -163,7 +169,7 @@ class DimensionalAxis:
 
     def get_axis_label(self) -> str:
         """Make the string that appears as the axis label"""
-        return f"{self.name} [{koozie.format_units(self.units)}]"
+        return f"{self.name}{add_units(self.units)}"
 
     @staticmethod
     def get_axis_range(value_min, value_max):
@@ -333,7 +339,7 @@ class DimensionalPlot:
             }
             x_axis_label = f"{self.x_axis.name}"
             if isinstance(self.x_axis, DimensionalData):
-                x_axis_label += f" [{koozie.format_units(self.x_axis.display_units)}]"
+                x_axis_label += add_units(self.x_axis.display_units)
             for subplot_index, subplot in enumerate(self.subplots):
                 subplot_number = subplot_index + 1
                 x_axis_id = subplot_number
@@ -441,6 +447,8 @@ class DimensionalPlot:
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
+            self.figure.layout["legend"] = {"xanchor": "left", "yanchor": "top", "y": 0.99, "x": 0.01}
+
             if uses_second_y_axis:
                 self.figure.layout["legend"] = {
                     "x": 1.05,

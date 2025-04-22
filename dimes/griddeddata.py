@@ -17,6 +17,7 @@ from .dimensional_plot import (
     COLOR_SCALE_SEQUENCE,
     get_color_from_scale,
     LineProperties,
+    add_units,
 )
 
 
@@ -40,10 +41,10 @@ class DataSelection:
     Class for selecting data to display in a chart
     """
 
-    # TODO: Add color and precision?
+    # TODO: Add color?
 
     name: str
-    units: str
+    units: str | None = None
     precision: int = 2
 
 
@@ -100,10 +101,10 @@ class RegularGridData:
         header_row = []
         for grid_axis in self.grid_axes:
             grid_axes_indices.append(list(range(len(list(grid_axis.data_values)))))
-            header_row.append(f"{grid_axis.name} [{format_units(grid_axis.display_units)}]")
+            header_row.append(f"{grid_axis.name}{add_units(grid_axis.display_units)}")
 
         for grid_point_data_set in self.grid_point_data_sets:
-            header_row.append(f"{grid_point_data_set.name} [{format_units(grid_point_data_set.display_units)}]")
+            header_row.append(f"{grid_point_data_set.name}{add_units(grid_point_data_set.display_units)}")
 
         with open(output_path, "w", encoding="UTF-8") as csv_object:
             writer_object = writer(csv_object)
@@ -194,14 +195,20 @@ class RegularGridData:
             if grid_axis.name == x_grid_axis.name:
                 axis_indices[i] = list(range(len(grid_axis_values)))
                 x_axis = deepcopy(grid_axis)
+                if x_grid_axis.units is None:
+                    x_grid_axis.units = grid_axis.display_units
                 x_axis.set_display_units(x_grid_axis.units)
             if legend_grid_axis is not None:
                 if grid_axis.name == legend_grid_axis.name:
+                    if legend_grid_axis.units is None:
+                        legend_grid_axis.units = grid_axis.display_units
                     legend_axis_index = i
                     axis_indices[i] = list(range(len(grid_axis_values)))
             if grid_axis.name in constrained_grid_axis_names:
                 for constrained_grid_axis in constrained_grid_axes:
                     selection = constrained_grid_axis.selection
+                    if selection.units is None:
+                        selection.units = grid_axis.display_units
                     value = constrained_grid_axis.value
                     if grid_axis.name == selection.name:
                         matching_value = (
@@ -214,12 +221,14 @@ class RegularGridData:
                         if selection.units != grid_axis.native_units:
                             matched_value = convert(matched_value, grid_axis.native_units, selection.units)
                         constraints_text.append(
-                            f"{selection.name} = {matched_value:.{selection.precision}f} [{format_units(selection.units)}]"
+                            f"{selection.name} = {matched_value:.{selection.precision}f}{add_units(selection.units)}"
                         )
 
         # Create plot
         assert x_axis is not None
-        plot = DimensionalPlot(x_axis, additional_info="<br>".join(constraints_text))
+        plot = DimensionalPlot(
+            x_axis, additional_info="<br>".join(constraints_text) if len(constrained_grid_axis_names) > 0 else None
+        )
 
         if legend_grid_axis is not None:
             # Loop over legend axis values and add display data for each
@@ -246,12 +255,16 @@ class RegularGridData:
                     plot.add_display_data(
                         DisplayData(
                             data_values,
-                            name=f"{legend_grid_axis.name} = {legend_axis_value:.{legend_grid_axis.precision}f} [{format_units(legend_grid_axis.units)}]",
+                            name=f"{legend_grid_axis.name} = {legend_axis_value:.{legend_grid_axis.precision}f}{add_units(legend_grid_axis.units)}",
                             native_units=grid_point_data_set.native_units,
                             display_units=display_variable.units,
                             line_properties=LineProperties(color=line_color),
                             legend_group=f"{display_variable.name}",
-                            y_axis_name=grid_point_data_set.y_axis_name,
+                            y_axis_name=(
+                                grid_point_data_set.name
+                                if grid_point_data_set.y_axis_name is None
+                                else grid_point_data_set.y_axis_name
+                            ),
                         )
                     )
         else:
