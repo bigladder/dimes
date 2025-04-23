@@ -447,7 +447,7 @@ class DimensionalPlot:
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
-            self.figure.layout["legend"] = {"xanchor": "left", "yanchor": "top", "y": 0.99, "x": 0.01}
+            # self.figure.layout["legend"] = {"xanchor": "left", "yanchor": "top", "y": 0.99, "x": 0.01}
 
             if uses_second_y_axis:
                 self.figure.layout["legend"] = {
