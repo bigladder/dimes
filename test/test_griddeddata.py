@@ -1,7 +1,8 @@
-# pylint:disable=C0114
+# mypy: disable-error-code="list-item"
 
 from pathlib import Path
-from dimes.griddeddata import GridAxis, GridPointData, RegularGridData, DataSelection, AxisConstraint
+
+from dimes.griddeddata import AxisConstraint, DataSelection, GridAxis, GridPointData, RegularGridData
 
 TESTING_DIRECTORY = Path("test_outputs")
 TESTING_DIRECTORY.mkdir(exist_ok=True)

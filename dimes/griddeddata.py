@@ -1,23 +1,23 @@
 """For making plots of multi-dimensional gridded data."""
 
-from typing import SupportsFloat
-from enum import Enum
-from dataclasses import dataclass
-from itertools import product as cartesian_product
-from csv import writer
-from itertools import cycle
 from copy import deepcopy
+from csv import writer
+from dataclasses import dataclass
+from enum import Enum
+from itertools import cycle
+from itertools import product as cartesian_product
+from typing import SupportsFloat
 
-from koozie import convert, format_units
+from koozie import convert
 
 from .dimensional_plot import (
-    DimensionalData,
-    DisplayData,
-    DimensionalPlot,
     COLOR_SCALE_SEQUENCE,
-    get_color_from_scale,
+    DimensionalData,
+    DimensionalPlot,
+    DisplayData,
     LineProperties,
     add_units,
+    get_color_from_scale,
 )
 
 
@@ -75,7 +75,8 @@ class RegularGridData:
             size = len(list(grid_point_data_set.data_values))
             if size != number_of_grid_points:
                 raise RuntimeError(
-                    f"grid_point_data_set, {grid_point_data_set.name}, size ({size}) does not match size of grid, ({number_of_grid_points})."
+                    f"grid_point_data_set, {grid_point_data_set.name}, size ({size}) "
+                    f"does not match size of grid, ({number_of_grid_points})."
                 )
 
         # TODO: Make interpolator
@@ -87,7 +88,8 @@ class RegularGridData:
         return index
 
     def get_grid_point_indices(
-        self, axis_indices: list[list[int]]  # For each axis, list the axis indices where data is requested
+        self,
+        axis_indices: list[list[int]],  # For each axis, list the axis indices where data is requested
     ) -> list[
         int
     ]:  # Returns a list of indices into grid point data sets at the corresponding combinations of grid index values
@@ -119,7 +121,7 @@ class RegularGridData:
                     content_row.append(list(grid_point_data_set.data_values)[combination_index])
                 writer_object.writerow(content_row)
 
-    def make_plot(
+    def make_plot(  # noqa: PLR0912 PLR0915
         self,
         x_grid_axis: DataSelection,  # Grid axis to use as the x-axis in the plot
         display_data: (
@@ -128,7 +130,6 @@ class RegularGridData:
         legend_grid_axis: DataSelection | None = None,  # Name of grid axis to use in the legend of the plot
         constrained_grid_axes: list[AxisConstraint] | None = None,  # Constraints on axis not plotted
     ) -> DimensionalPlot:
-
         constrained_grid_axis_names: list[str] = []
 
         if constrained_grid_axes is None:
@@ -233,6 +234,7 @@ class RegularGridData:
         if legend_grid_axis is not None:
             # Loop over legend axis values and add display data for each
             assert legend_axis_index is not None
+            assert legend_grid_axis.units is not None
             grid_axis = self.grid_axes[legend_axis_index]
             legend_axis_indices = axis_indices[legend_axis_index]
             grid_axis_values = list(grid_axis.data_values)
@@ -255,7 +257,8 @@ class RegularGridData:
                     plot.add_display_data(
                         DisplayData(
                             data_values,
-                            name=f"{legend_grid_axis.name} = {legend_axis_value:.{legend_grid_axis.precision}f}{add_units(legend_grid_axis.units)}",
+                            name=f"{legend_grid_axis.name} = "
+                            f"{legend_axis_value:.{legend_grid_axis.precision}f}{add_units(legend_grid_axis.units)}",
                             native_units=grid_point_data_set.native_units,
                             display_units=display_variable.units,
                             line_properties=LineProperties(color=line_color),

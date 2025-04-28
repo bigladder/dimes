@@ -15,10 +15,6 @@ Repository = "https://github.com/bigladder/dimes"
 [dependency-groups]
 dev = ["pytest", "ruff", "pre-commit", "mypy"]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [tool.ruff]
 line-length = 120
 
@@ -45,3 +41,7 @@ check_untyped_defs = true
 [[tool.mypy.overrides]]
 module = "dimes.*"
 disable_error_code = ["import"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

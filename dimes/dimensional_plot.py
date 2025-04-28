@@ -1,17 +1,15 @@
-from pathlib import Path
-from typing import SupportsFloat
+import bisect
+import math
+import warnings
 from collections.abc import Iterable
 from dataclasses import dataclass
-import warnings
 from datetime import datetime
-import math
-import bisect
-
-from plotly.graph_objects import Figure, Scatter  # type: ignore
-from plotly.colors import sample_colorscale
+from pathlib import Path
+from typing import SupportsFloat
 
 import koozie
-
+from plotly.colors import sample_colorscale
+from plotly.graph_objects import Figure, Scatter  # type: ignore
 
 WHITE = "white"
 BLACK = "black"
@@ -28,7 +26,6 @@ COLOR_SCALE_SEQUENCE = [
 
 
 def get_color_from_scale(pallet, ratio, minimum=0.25, reverse=True):
-
     scale_ratio = minimum + (1.0 - minimum) * ratio
     if reverse:
         scale_ratio = minimum + (1.0 - minimum) * (1.0 - ratio)
@@ -47,7 +44,6 @@ class LineProperties:
     marker_fill_color: str | None = None
 
     def get_line_mode(self):
-
         if self.line_width is None:
             has_lines = True
         elif self.line_width == 0:
@@ -110,7 +106,8 @@ class DimensionalData:
             display_units_dimensionality = koozie.get_dimensionality(self.display_units)
             if self.dimensionality != display_units_dimensionality:
                 raise RuntimeError(
-                    f"display_units, {self.display_units}, dimensionality ({display_units_dimensionality}) does not match native_units, {self.native_units}, dimensionality ({self.dimensionality})"
+                    f"display_units, {self.display_units}, dimensionality ({display_units_dimensionality}) "
+                    f"does not match native_units, {self.native_units}, dimensionality ({self.dimensionality})"
                 )
 
 
@@ -127,7 +124,7 @@ class TimeSeriesAxis:
 class DisplayData(DimensionalData):
     """Data used for display."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 # TODO: fix?
         self,
         data_values: Iterable[SupportsFloat],
         name: str | None = None,
@@ -176,14 +173,18 @@ class DimensionalAxis:
         max_ticks = 6
         tick_scale_options = [1, 2, 5, 10]
 
+        SCALE_BASE = 10
+
         value_range = value_max - value_min
         if value_range == 0.0:
             return [value_min, value_max]
         min_tick_size = value_range / max_ticks
-        magnitude = 10 ** math.floor(math.log(min_tick_size, 10))
+        magnitude = SCALE_BASE ** math.floor(math.log(min_tick_size, SCALE_BASE))
         residual = min_tick_size / magnitude
         tick_size = (
-            tick_scale_options[bisect.bisect_right(tick_scale_options, residual)] if residual < 10 else 10
+            tick_scale_options[bisect.bisect_right(tick_scale_options, residual)]
+            if residual < SCALE_BASE
+            else SCALE_BASE
         ) * magnitude
         range_min = math.floor(value_min / tick_size) * tick_size
         range_max = math.ceil(value_max / tick_size) * tick_size
@@ -260,7 +261,7 @@ class DimensionalPlot:
                 )
             )
 
-    def add_display_data(
+    def add_display_data(  # noqa: PLR0912
         self,
         display_data: DisplayData,
         subplot_number: int | None = None,
@@ -285,11 +286,11 @@ class DimensionalPlot:
                         break
 
             # If current subplot doesn't already have two axes, add it there
+            MAX_SUBPLOT_AXES = 2
             if not subplot_number_set:
-
                 current_subplot = self.subplots[-1]
                 if current_subplot is not None:
-                    if len(current_subplot.axes) < 2:
+                    if len(current_subplot.axes) < MAX_SUBPLOT_AXES:
                         subplot_number = len(self.subplots)
                         subplot_number_set = True
 
@@ -300,11 +301,10 @@ class DimensionalPlot:
                         subplot_number = subplot_index + 1
                         subplot_number_set = True
                         break
-                    else:
-                        if len(subplot.axes) < 2:
-                            subplot_number = subplot_index + 1
-                            subplot_number_set = True
-                            break
+                    elif len(subplot.axes) < MAX_SUBPLOT_AXES:
+                        subplot_number = subplot_index + 1
+                        subplot_number_set = True
+                        break
 
             if not subplot_number_set:
                 # If no subplot is available, add a new subplot
@@ -319,7 +319,7 @@ class DimensionalPlot:
             self.subplots[subplot_index] = DimensionalSubplot()
         self.subplots[subplot_index].add_display_data(display_data)  # type: ignore[union-attr]
 
-    def finalize_plot(self):
+    def finalize_plot(self):  # noqa: PLR0912 PLR0915
         """Once all DisplayData objects have been added, generate plot and subplots."""
         if not self.is_finalized:
             grid_line_width = 1.5
@@ -355,13 +355,13 @@ class DimensionalPlot:
                                 display_data.native_units,
                                 axis.units,
                             )
-                            axis.range_min = min(min(y_values), axis.range_min)
+                            axis.range_min = min(*y_values, axis.range_min)
                             if display_data.y_axis_min is not None:
                                 data_y_axis_min = koozie.convert(
                                     display_data.y_axis_min, display_data.native_units, axis.units
                                 )
                                 axis.range_min = min(data_y_axis_min, axis.range_min)
-                            axis.range_max = max(max(y_values), axis.range_max)
+                            axis.range_max = max(*y_values, axis.range_max)
                             if display_data.x_axis is None:
                                 if isinstance(display_data.x_axis, DimensionalData):
                                     x_axis_values = koozie.convert(
@@ -369,23 +369,23 @@ class DimensionalPlot:
                                     )
                                 else:
                                     x_axis_values = self.x_axis.data_values
+                            elif isinstance(display_data.x_axis, DimensionalData) and isinstance(
+                                self.x_axis, DimensionalData
+                            ):
+                                x_axis_values = koozie.convert(
+                                    display_data.x_axis.data_values,
+                                    display_data.x_axis.native_units,
+                                    self.x_axis.display_units,
+                                )
+                            elif isinstance(display_data.x_axis, TimeSeriesAxis) and isinstance(
+                                self.x_axis, TimeSeriesAxis
+                            ):
+                                x_axis_values = display_data.x_axis.data_values
                             else:
-                                if isinstance(display_data.x_axis, DimensionalData) and isinstance(
-                                    self.x_axis, DimensionalData
-                                ):
-                                    x_axis_values = koozie.convert(
-                                        display_data.x_axis.data_values,
-                                        display_data.x_axis.native_units,
-                                        self.x_axis.display_units,
-                                    )
-                                elif isinstance(display_data.x_axis, TimeSeriesAxis) and isinstance(
-                                    self.x_axis, TimeSeriesAxis
-                                ):
-                                    x_axis_values = display_data.x_axis.data_values
-                                else:
-                                    raise RuntimeError(
-                                        f"DispalyData x-axis, {display_data.x_axis.name}, and Plot x-axis, {self.x_axis.name}, must both be DimensionalData or TimeSeriesAxes."
-                                    )
+                                raise RuntimeError(
+                                    f"DispalyData x-axis, {display_data.x_axis.name}, and Plot x-axis, "
+                                    f"{self.x_axis.name}, must both be DimensionalData or TimeSeriesAxes."
+                                )
                             self.figure.add_trace(
                                 Scatter(
                                     x=x_axis_values,
@@ -474,8 +474,9 @@ class DimensionalPlot:
         scale (int, float, None): Adjusts the resolution of the output image.
         A value cannot be equal to or less than 0 or greater than 16.
         """
+        MAX_SCALE = 16
         if scale is not None:
-            if (scale > 16) | (scale <= 0):
+            if (scale > MAX_SCALE) | (scale <= 0):
                 raise ValueError(f"Scale value {scale} cannot be greater than 16 or less than or equal to 0.")
         self.figure.layout["width"] = width
         self.figure.layout["height"] = height
