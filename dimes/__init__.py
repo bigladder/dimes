@@ -1,11 +1,12 @@
 """dimes public interface"""
 
+# ruff: noqa: F401
 from .dimensional_plot import (
-    LineProperties,
-    MarkersOnly,
-    LinesOnly,
+    DimensionalData,
     DimensionalPlot,
     DisplayData,
-    DimensionalData,
+    LineProperties,
+    LinesOnly,
+    MarkersOnly,
     get_color_from_scale,
 )
