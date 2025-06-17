@@ -339,11 +339,6 @@ class DimensionalPlot:
                 "showgrid": True,
                 "gridcolor": GREY,
                 "gridwidth": grid_line_width,
-                "showspikes": True,
-                "spikemode": "across",
-                "spikecolor": "black",
-                "spikethickness": -1,
-                "spikedash": "solid",
             }
             x_axis_label = f"{self.x_axis.name}"
             if isinstance(self.x_axis, DimensionalData):
@@ -446,6 +441,11 @@ class DimensionalPlot:
                         "showticklabels": None if is_last_subplot else False,
                         "tickcolor": None if not is_last_subplot else BLACK,
                         "tickwidth": None if not is_last_subplot else grid_line_width,
+                        "showspikes": True,
+                        "spikemode": "across",
+                        "spikecolor": "black",
+                        "spikethickness": -1,
+                        "spikedash": "solid",
                     }
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
                     self.figure.layout.update({"hoversubplots": "axis", "hovermode": "x"})
