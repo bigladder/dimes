@@ -439,8 +439,6 @@ class DimensionalPlot:
                         "domain": [0.0, 1.0],
                         "matches": (f"x{number_of_subplots}" if subplot_number < number_of_subplots else None),
                         "showticklabels": None if is_last_subplot else False,
-                        "ticks": None if not is_last_subplot else "outside",
-                        "tickson": None if not is_last_subplot else "boundaries",
                         "tickcolor": None if not is_last_subplot else BLACK,
                         "tickwidth": None if not is_last_subplot else grid_line_width,
                     }
