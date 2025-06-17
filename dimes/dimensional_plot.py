@@ -336,6 +336,9 @@ class DimensionalPlot:
                 "linecolor": BLACK,
                 "linewidth": grid_line_width,
                 "zeroline": False,
+                "showgrid": True,
+                "gridcolor": GREY,
+                "gridwidth": grid_line_width,
             }
             x_axis_label = f"{self.x_axis.name}"
             if isinstance(self.x_axis, DimensionalData):
@@ -422,9 +425,6 @@ class DimensionalPlot:
                             "overlaying": (f"y{subplot_base_y_axis_id}" if not is_base_y_axis else None),
                             "tickmode": "sync" if not is_base_y_axis else None,
                             "autoshift": True if axis_number > 1 else None,
-                            "showgrid": True,
-                            "gridcolor": GREY,
-                            "gridwidth": grid_line_width,
                             "range": axis.get_axis_range(axis.range_min, axis.range_max),
                         }
                         if y_axis_side == "right":
