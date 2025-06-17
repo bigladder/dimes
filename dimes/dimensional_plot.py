@@ -339,6 +339,11 @@ class DimensionalPlot:
                 "showgrid": True,
                 "gridcolor": GREY,
                 "gridwidth": grid_line_width,
+                "showspikes": True,
+                "spikemode": "across",
+                "spikecolor": "black",
+                "spikethickness": -1,
+                "spikedash": "solid",
             }
             x_axis_label = f"{self.x_axis.name}"
             if isinstance(self.x_axis, DimensionalData):
@@ -443,6 +448,7 @@ class DimensionalPlot:
                         "tickwidth": None if not is_last_subplot else grid_line_width,
                     }
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
+                    self.figure.layout.update({"hoversubplots": "axis", "hovermode": "x"})
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
             # self.figure.layout["legend"] = {"xanchor": "left", "yanchor": "top", "y": 0.99, "x": 0.01}
