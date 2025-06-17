@@ -414,6 +414,7 @@ class DimensionalPlot:
                                     },
                                     legendgroup=display_data.legend_group,
                                     legendgrouptitle={"text": display_data.legend_group},
+                                    hoverlabel={"namelength": -1},
                                 ),
                             )
                         is_base_y_axis = subplot_base_y_axis_id == y_axis_id
