@@ -234,6 +234,7 @@ class DimensionalPlot:
         x_axis: DimensionalData | TimeSeriesAxis | list[SupportsFloat] | list[datetime],
         title: str | None = None,
         additional_info: str | None = None,
+        vertical_grid_lines: bool = False,
     ):
         self.figure = Figure()
         self.x_axis: DimensionalData | TimeSeriesAxis
@@ -260,6 +261,7 @@ class DimensionalPlot:
                     legendgrouptitle={"text": "Constrained Dimensions"},
                 )
             )
+        self.vertical_grid_lines = vertical_grid_lines
 
     def add_display_data(  # noqa: PLR0912
         self,
@@ -336,9 +338,6 @@ class DimensionalPlot:
                 "linecolor": BLACK,
                 "linewidth": grid_line_width,
                 "zeroline": False,
-                "showgrid": True,
-                "gridcolor": GREY,
-                "gridwidth": grid_line_width,
             }
             x_axis_label = f"{self.x_axis.name}"
             if isinstance(self.x_axis, DimensionalData):
@@ -429,6 +428,9 @@ class DimensionalPlot:
                             "tickmode": "sync" if not is_base_y_axis else None,
                             "autoshift": True if axis_number > 1 else None,
                             "range": axis.get_axis_range(axis.range_min, axis.range_max),
+                            "showgrid": True,
+                            "gridcolor": GREY,
+                            "gridwidth": grid_line_width,
                         }
                         if y_axis_side == "right":
                             uses_second_y_axis = True
@@ -450,6 +452,10 @@ class DimensionalPlot:
                         "spikethickness": -1,  # Negative value removes white border around spike.
                         "spikedash": "solid",
                     }
+                    if self.vertical_grid_lines:
+                        self.figure.layout[f"xaxis{x_axis_id}"]["showgrid"] = True
+                        self.figure.layout[f"xaxis{x_axis_id}"]["gridcolor"] = GREY
+                        self.figure.layout[f"xaxis{x_axis_id}"]["gridwidth"] = grid_line_width
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
                     self.figure.layout["hoversubplots"] = "axis"
                     self.figure.layout["hovermode"] = "x"
