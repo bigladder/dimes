@@ -453,9 +453,13 @@ class DimensionalPlot:
                         "spikedash": "solid",
                     }
                     if self.vertical_grid_lines:
-                        self.figure.layout[f"xaxis{x_axis_id}"]["showgrid"] = True
-                        self.figure.layout[f"xaxis{x_axis_id}"]["gridcolor"] = GREY
-                        self.figure.layout[f"xaxis{x_axis_id}"]["gridwidth"] = grid_line_width
+                        self.figure.layout[f"xaxis{x_axis_id}"].update(
+                            {
+                                "showgrid": True,
+                                "gridcolor": GREY,
+                                "gridwidth": grid_line_width,
+                            }
+                        )
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
                     self.figure.layout["hovermode"] = (
                         "x"  # Display all y-axis values for all plot traces along same x-axis value.
