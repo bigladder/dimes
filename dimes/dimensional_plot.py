@@ -414,7 +414,9 @@ class DimensionalPlot:
                                     },
                                     legendgroup=display_data.legend_group,
                                     legendgrouptitle={"text": display_data.legend_group},
-                                    hoverlabel={"namelength": -1},
+                                    hoverlabel={
+                                        "namelength": -1
+                                    },  # Value of -1 displays full trace name in hover label.
                                 ),
                             )
                         is_base_y_axis = subplot_base_y_axis_id == y_axis_id
@@ -445,7 +447,7 @@ class DimensionalPlot:
                         "showspikes": True,
                         "spikemode": "across",
                         "spikecolor": "black",
-                        "spikethickness": -1,
+                        "spikethickness": -1,  # Negative value removes white border around spike.
                         "spikedash": "solid",
                     }
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
