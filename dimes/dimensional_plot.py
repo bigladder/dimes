@@ -449,7 +449,8 @@ class DimensionalPlot:
                         "spikedash": "solid",
                     }
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
-                    self.figure.layout.update({"hoversubplots": "axis", "hovermode": "x"})
+                    self.figure.layout["hoversubplots"] = "axis"
+                    self.figure.layout["hovermode"] = "x"
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
             # self.figure.layout["legend"] = {"xanchor": "left", "yanchor": "top", "y": 0.99, "x": 0.01}
