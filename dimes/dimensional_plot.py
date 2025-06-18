@@ -415,7 +415,7 @@ class DimensionalPlot:
                                     legendgrouptitle={"text": display_data.legend_group},
                                     hoverlabel={
                                         "namelength": -1
-                                    },  # Value of -1 displays full trace name in hover label.
+                                    },  # Value of -1 prevents long trace names from being truncated in hover label..
                                 ),
                             )
                         is_base_y_axis = subplot_base_y_axis_id == y_axis_id
