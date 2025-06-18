@@ -457,7 +457,7 @@ class DimensionalPlot:
                         self.figure.layout[f"xaxis{x_axis_id}"]["gridcolor"] = GREY
                         self.figure.layout[f"xaxis{x_axis_id}"]["gridwidth"] = grid_line_width
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
-                    self.figure.layout["hovermode"] = "x"
+                    self.figure.layout["hovermode"] = "x" # Display all y-axis values for all plot traces along same x-axis value.
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
             # self.figure.layout["legend"] = {"xanchor": "left", "yanchor": "top", "y": 0.99, "x": 0.01}
