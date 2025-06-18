@@ -234,6 +234,7 @@ class DimensionalPlot:
         x_axis: DimensionalData | TimeSeriesAxis | list[SupportsFloat] | list[datetime],
         title: str | None = None,
         additional_info: str | None = None,
+        vertical_grid_lines: bool = False,
     ):
         self.figure = Figure()
         self.x_axis: DimensionalData | TimeSeriesAxis
@@ -260,6 +261,7 @@ class DimensionalPlot:
                     legendgrouptitle={"text": "Constrained Dimensions"},
                 )
             )
+        self.vertical_grid_lines = vertical_grid_lines
 
     def add_display_data(  # noqa: PLR0912
         self,
@@ -411,6 +413,9 @@ class DimensionalPlot:
                                     },
                                     legendgroup=display_data.legend_group,
                                     legendgrouptitle={"text": display_data.legend_group},
+                                    hoverlabel={
+                                        "namelength": -1
+                                    },  # Value of -1 prevents long trace names from being truncated in hover label..
                                 ),
                             )
                         is_base_y_axis = subplot_base_y_axis_id == y_axis_id
@@ -422,10 +427,10 @@ class DimensionalPlot:
                             "overlaying": (f"y{subplot_base_y_axis_id}" if not is_base_y_axis else None),
                             "tickmode": "sync" if not is_base_y_axis else None,
                             "autoshift": True if axis_number > 1 else None,
+                            "range": axis.get_axis_range(axis.range_min, axis.range_max),
                             "showgrid": True,
                             "gridcolor": GREY,
                             "gridwidth": grid_line_width,
-                            "range": axis.get_axis_range(axis.range_min, axis.range_max),
                         }
                         if y_axis_side == "right":
                             uses_second_y_axis = True
@@ -439,12 +444,26 @@ class DimensionalPlot:
                         "domain": [0.0, 1.0],
                         "matches": (f"x{number_of_subplots}" if subplot_number < number_of_subplots else None),
                         "showticklabels": None if is_last_subplot else False,
-                        "ticks": None if not is_last_subplot else "outside",
-                        "tickson": None if not is_last_subplot else "boundaries",
                         "tickcolor": None if not is_last_subplot else BLACK,
                         "tickwidth": None if not is_last_subplot else grid_line_width,
+                        "showspikes": True,
+                        "spikemode": "across",
+                        "spikecolor": "black",
+                        "spikethickness": -1,  # Negative value removes white border around spike.
+                        "spikedash": "solid",
                     }
+                    if self.vertical_grid_lines:
+                        self.figure.layout[f"xaxis{x_axis_id}"].update(
+                            {
+                                "showgrid": True,
+                                "gridcolor": GREY,
+                                "gridwidth": grid_line_width,
+                            }
+                        )
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
+                    self.figure.layout["hovermode"] = (
+                        "x"  # Display all y-axis values for all plot traces along same x-axis value.
+                    )
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
             # self.figure.layout["legend"] = {"xanchor": "left", "yanchor": "top", "y": 0.99, "x": 0.01}

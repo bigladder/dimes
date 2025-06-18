@@ -193,3 +193,13 @@ def test_get_axis_range():
         min_value = check[0][0]
         max_value = check[0][1]
         assert DimensionalAxis.get_axis_range(min_value, max_value) == check[1]
+
+
+def test_vertical_grid_lines():
+    """Test basic subplot"""
+    plot = DimensionalPlot(TEST_AXIS, vertical_grid_lines=True)
+    plot.add_display_data(DisplayData([x**2 for x in plot.x_axis.data_values]))
+    plot.add_display_data(DisplayData([x**3 for x in plot.x_axis.data_values]), subplot_number=2)
+    plot.add_display_data(DisplayData([x**4 for x in plot.x_axis.data_values]), subplot_number=3)
+
+    plot.write_html_plot(Path(TESTING_DIRECTORY, "vertical_grid_lines.html"))
