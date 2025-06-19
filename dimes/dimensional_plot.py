@@ -390,11 +390,17 @@ class DimensionalPlot:
                                 )
                             self.figure.add_trace(
                                 Scatter(
+                                    yaxis=f"y{y_axis_id}",
+                                    xaxis=f"x{x_axis_id}",
+                                )
+                            )
+                            self.figure.add_trace(
+                                Scatter(
                                     x=x_axis_values,
                                     y=y_values,
                                     name=display_data.name,
                                     yaxis=f"y{y_axis_id}",
-                                    xaxis=f"x{x_axis_id}",
+                                    xaxis=f"x{number_of_subplots}",
                                     mode=display_data.line_properties.get_line_mode(),
                                     visible=("legendonly" if not display_data.is_visible else True),
                                     line={
@@ -464,6 +470,7 @@ class DimensionalPlot:
                     self.figure.layout["hovermode"] = (
                         "x"  # Display all y-axis values for all plot traces along same x-axis value.
                     )
+                    self.figure.layout["hoversubplots"] = "axis"
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
             # self.figure.layout["legend"] = {"xanchor": "left", "yanchor": "top", "y": 0.99, "x": 0.01}
