@@ -346,6 +346,8 @@ class DimensionalPlot:
                 subplot_number = subplot_index + 1
                 x_axis_id = subplot_number
                 subplot_base_y_axis_id = absolute_axis_index + 1
+                # Add dummy trace to generate horizontal axis borders on plots
+                self.figure.add_trace(Scatter(yaxis=f"y{subplot_base_y_axis_id}", xaxis=f"x{x_axis_id}", visible=False))
                 if subplot is not None:
                     y_axis_side = "left"
                     for axis_number, axis in enumerate(subplot.axes):
@@ -390,16 +392,11 @@ class DimensionalPlot:
                                 )
                             self.figure.add_trace(
                                 Scatter(
-                                    yaxis=f"y{y_axis_id}",
-                                    xaxis=f"x{x_axis_id}",
-                                )
-                            )
-                            self.figure.add_trace(
-                                Scatter(
                                     x=x_axis_values,
                                     y=y_values,
                                     name=display_data.name,
                                     yaxis=f"y{y_axis_id}",
+                                    # Use common x-axis for subplot hover syncing across all traces
                                     xaxis=f"x{number_of_subplots}",
                                     mode=display_data.line_properties.get_line_mode(),
                                     visible=("legendonly" if not display_data.is_visible else True),
@@ -467,10 +464,12 @@ class DimensionalPlot:
                             }
                         )
                     self.figure.layout[f"xaxis{x_axis_id}"].update(xy_common_axis_format)
-                    self.figure.layout["hovermode"] = (
-                        "x"  # Display all y-axis values for all plot traces along same x-axis value.
+                    self.figure.layout.update(
+                        {
+                            "hovermode": "x",  # Display all y-axis values for all plot traces along same x-axis value.
+                            "hoversubplots": "axis",  # Display all subplots for the hovered x-axis value.
+                        }
                     )
-                    self.figure.layout["hoversubplots"] = "axis"
                 else:
                     warnings.warn(f"Subplot {subplot_number} is unused.")
             # self.figure.layout["legend"] = {"xanchor": "left", "yanchor": "top", "y": 0.99, "x": 0.01}
