@@ -136,6 +136,8 @@ class DisplayData(DimensionalData):
         x_axis: DimensionalData | TimeSeriesAxis | list[SupportsFloat] | list[datetime] | None = None,
         y_axis_min: SupportsFloat | None = 0.0,
         y_axis_name: str | None = None,
+        hover_data: dict[str, list] | None = None,
+        hover_template: str | None = None,
     ):
         super().__init__(data_values, name, native_units, display_units)
         self.x_axis: DimensionalData | TimeSeriesAxis | None
@@ -151,6 +153,8 @@ class DisplayData(DimensionalData):
         self.line_properties = line_properties
         self.is_visible = is_visible
         self.legend_group = legend_group
+        self.hover_data = hover_data
+        self.hover_template = hover_template
 
 
 class DimensionalAxis:
@@ -418,7 +422,11 @@ class DimensionalPlot:
                                     legendgrouptitle={"text": display_data.legend_group},
                                     hoverlabel={
                                         "namelength": -1
-                                    },  # Value of -1 prevents long trace names from being truncated in hover label..
+                                    },  # Value of -1 prevents long trace names from being truncated in hover label.
+                                    customdata=display_data.hover_data,
+                                    hovertemplate=display_data.hover_template
+                                    if display_data.hover_template is not None
+                                    else f"{display_data.name}: %{{y:.2f}}<extra></extra>",
                                 ),
                             )
                         is_base_y_axis = subplot_base_y_axis_id == y_axis_id
