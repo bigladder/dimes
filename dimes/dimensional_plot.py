@@ -391,7 +391,7 @@ class DimensionalPlot:
                                 x_axis_values = display_data.x_axis.data_values
                             else:
                                 raise RuntimeError(
-                                    f"DispalyData x-axis, {display_data.x_axis.name}, and Plot x-axis, "
+                                    f"DisplayData x-axis, {display_data.x_axis.name}, and Plot x-axis, "
                                     f"{self.x_axis.name}, must both be DimensionalData or TimeSeriesAxes."
                                 )
                             self.figure.add_trace(
